@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useSavedDates } from "../hooks/useSavedDates";
@@ -39,6 +40,14 @@ function formatDisplayDate(dateStr: string): string {
   const m = d.getMonth() + 1;
   const day = d.getDate();
   return `${y}년 ${m}월 ${day}일`;
+}
+
+function getDaysBetween(baseStr: string, targetStr: string): number {
+  const a = new Date(baseStr + "T12:00:00");
+  const b = new Date(targetStr + "T12:00:00");
+  a.setHours(0, 0, 0, 0);
+  b.setHours(0, 0, 0, 0);
+  return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 }
 
 function SimpleCalendar({
@@ -267,10 +276,49 @@ function ListItem({
   onPress: () => void;
   onDelete: () => void;
 }) {
+  const totalDays = getDaysBetween(item.baseDate, item.targetDate);
+  const todayStr = useMemo(() => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(t.getDate()).padStart(2, "0")}`;
+  }, []);
+  const base = new Date(item.baseDate + "T12:00:00");
+  const target = new Date(item.targetDate + "T12:00:00");
+  const today = new Date(todayStr + "T12:00:00");
+  base.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  const baseTime = base.getTime();
+  const targetTime = target.getTime();
+  const todayTime = today.getTime();
+  let elapsedDays = 0;
+  if (todayTime < baseTime) elapsedDays = 0;
+  else if (todayTime > targetTime) elapsedDays = totalDays;
+  else elapsedDays = getDaysBetween(item.baseDate, todayStr);
+  const progressPercent =
+    totalDays > 0 ? Math.round((elapsedDays / totalDays) * 100) : 0;
+
   return (
     <Pressable style={styles.item} onPress={onPress}>
+      <View style={styles.itemProgressBgWrap}>
+        <LinearGradient
+          colors={["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[
+            styles.itemProgressBg,
+            { width: `${Math.min(100, progressPercent)}%` },
+          ]}
+        />
+      </View>
       <View style={styles.itemContent}>
-        <Text style={styles.itemTitle}>{item.title}</Text>
+        <View style={styles.itemHeaderRow}>
+          <Text style={styles.itemTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+        </View>
         <Text style={styles.itemDate}>
           {formatDisplayDate(item.baseDate)} ~{" "}
           {formatDisplayDate(item.targetDate)}
@@ -283,7 +331,7 @@ function ListItem({
         }}
         style={styles.deleteBtn}
       >
-        <Ionicons name="trash-outline" size={22} color="#ef5350" />
+        <Ionicons name="trash-outline" size={22} color={theme.textSecondary} />
       </TouchableOpacity>
     </Pressable>
   );
@@ -301,6 +349,13 @@ export function DatesListScreen({
 }) {
   const insets = useSafeAreaInsets();
   const { dates, loading, add, remove } = useSavedDates();
+  const sortedDates = useMemo(
+    () =>
+      [...dates].sort((a, b) =>
+        a.targetDate < b.targetDate ? -1 : a.targetDate > b.targetDate ? 1 : 0
+      ),
+    [dates]
+  );
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState("");
   const [baseDate, setBaseDate] = useState("");
@@ -392,20 +447,20 @@ export function DatesListScreen({
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: 16 + insets.top }]}>
-        <Text style={styles.headerTitle}>등록한 날짜</Text>
+        <Text style={styles.headerTitle}>목표일 설정</Text>
         <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
-          <Text style={styles.addBtnText}>추가</Text>
+          <Ionicons name="add" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
       {loading ? (
         <Text style={styles.loading}>불러오는 중...</Text>
       ) : (
         <FlatList
-          data={dates}
+          data={sortedDates}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <Text style={styles.empty}>등록한 날짜가 없습니다.</Text>
+            <Text style={styles.empty}>목표일 설정이 없습니다.</Text>
           }
           renderItem={({ item }) => (
             <ListItem
@@ -577,7 +632,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.border,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
   headerTitle: {
     fontSize: 20,
@@ -585,14 +640,11 @@ const styles = StyleSheet.create({
     color: theme.text,
   },
   addBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    padding: 6,
     backgroundColor: theme.grassFilled,
-    borderRadius: 8,
-  },
-  addBtnText: {
-    color: "#fff",
-    fontWeight: "600",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
   },
   list: {
     padding: 20,
@@ -611,16 +663,39 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingVertical: 14,
     paddingHorizontal: 16,
     backgroundColor: theme.surface,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 10,
+    overflow: "hidden",
+  },
+  itemProgressBgWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  itemProgressBg: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    overflow: "hidden",
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
   },
   itemContent: {
     flex: 1,
     minWidth: 0,
+    zIndex: 1,
+  },
+  itemHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
   },
   itemTitle: {
     fontSize: 16,
@@ -628,12 +703,12 @@ const styles = StyleSheet.create({
     color: theme.text,
   },
   itemDate: {
-    fontSize: 14,
+    fontSize: 13,
     color: theme.textSecondary,
-    marginTop: 2,
   },
   deleteBtn: {
     padding: 8,
+    marginLeft: 4,
   },
   modalOverlay: {
     flex: 1,
