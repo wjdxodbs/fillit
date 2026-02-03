@@ -1,9 +1,15 @@
-import React, { useMemo, useState } from "react";
-import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
-import { useGrassColor } from "../contexts/GrassColorContext";
+import React, { useMemo } from "react";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { theme } from "../theme";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const CELL_GAP = 6;
+const COLUMNS = 7;
+/** 잔디 그리드와 동일한 좌우 여백 */
+const GRID_HORIZONTAL_PADDING = 40;
+const WEEKDAY_HEIGHT = 20;
+const WEEKDAY_MARGIN_BOTTOM = 4;
+const BORDER_VERTICAL_PADDING = 8;
 
 interface DayItem {
   date: number;
@@ -18,16 +24,15 @@ interface WeekDateStripProps {
 }
 
 export function WeekDateStrip({ year, month, todayDate }: WeekDateStripProps) {
-  const { color: grassColor } = useGrassColor();
-  const [containerWidth, setContainerWidth] = useState(0);
-  const onLayout = (e: LayoutChangeEvent) => {
-    const w = e.nativeEvent.layout.width;
-    if (w > 0) setContainerWidth(w);
-  };
-  const cellWidth = useMemo(() => {
-    if (containerWidth <= 0) return 40;
-    return Math.floor(containerWidth / 7);
-  }, [containerWidth]);
+  const { width: screenWidth } = useWindowDimensions();
+  const { cellWidth, columnHeight } = useMemo(() => {
+    const available = screenWidth - GRID_HORIZONTAL_PADDING;
+    const totalGap = (COLUMNS - 1) * CELL_GAP;
+    const cw = Math.floor((available - totalGap) / COLUMNS);
+    const ch =
+      WEEKDAY_HEIGHT + WEEKDAY_MARGIN_BOTTOM + cw + BORDER_VERTICAL_PADDING * 2;
+    return { cellWidth: cw, columnHeight: ch };
+  }, [screenWidth]);
 
   const { days, weekdayLabels } = useMemo(() => {
     const days: DayItem[] = [];
@@ -44,53 +49,52 @@ export function WeekDateStrip({ year, month, todayDate }: WeekDateStripProps) {
   }, [year, month, todayDate]);
 
   return (
-    <View style={styles.container} onLayout={onLayout}>
-      <View style={styles.inner}>
-        <View style={styles.weekdayRow}>
-          {weekdayLabels.map((label, i) => (
-            <View key={i} style={[styles.weekdayCell, { width: cellWidth }]}>
-              <Text style={styles.weekdayText}>{label}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.dateRow}>
-          {days.map((d, i) => (
-            <View
-              key={i}
-              style={[styles.dateCell, { width: cellWidth, height: cellWidth }]}
-            >
+    <View style={styles.container}>
+      <View style={styles.columnsRow}>
+        {days.map((d, i) => {
+          const label = weekdayLabels[i];
+          const columnStyle = {
+            width: cellWidth,
+            height: columnHeight,
+            marginRight: i < 6 ? CELL_GAP : 0,
+          };
+          const innerCellStyle = { width: cellWidth };
+          const content = (
+            <>
+              <View style={[styles.weekdayCell, innerCellStyle]}>
+                <Text style={styles.weekdayText}>{label}</Text>
+              </View>
               <View
-                style={[
-                  styles.dateInner,
-                  {
-                    width: d.isToday ? cellWidth * 0.68 : cellWidth,
-                    height: d.isToday ? cellWidth * 0.68 : cellWidth,
-                    borderRadius: d.isToday ? (cellWidth * 0.68) / 2 : 0,
-                    backgroundColor: d.isToday ? grassColor : undefined,
-                  },
-                ]}
+                style={[styles.dateCell, innerCellStyle, { height: cellWidth }]}
               >
+                <Text
+                  style={[styles.dateText, d.isToday && styles.dateTextToday]}
+                >
+                  {String(d.date)}
+                </Text>
+              </View>
+            </>
+          );
+          if (d.isToday) {
+            return (
+              <View key={i} style={[styles.column, columnStyle]}>
                 <View
                   style={[
-                    styles.dateTextBox,
-                    {
-                      width: Math.min(
-                        Math.max(40, cellWidth - 4),
-                        d.isToday ? cellWidth * 0.68 : cellWidth
-                      ),
-                    },
+                    styles.todayBorderWrap,
+                    { borderColor: theme.grassFilled },
                   ]}
                 >
-                  <Text
-                    style={[styles.dateText, d.isToday && styles.dateTextToday]}
-                  >
-                    {String(d.date)}
-                  </Text>
+                  <View style={styles.todayBorderInner}>{content}</View>
                 </View>
               </View>
+            );
+          }
+          return (
+            <View key={i} style={[styles.column, columnStyle]}>
+              {content}
             </View>
-          ))}
-        </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -101,46 +105,47 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: "100%",
   },
-  inner: {
-    width: "100%",
-  },
-  weekdayRow: {
+  columnsRow: {
     flexDirection: "row",
-    marginBottom: 4,
-    marginLeft: 0,
-    paddingLeft: 0,
   },
-  weekdayCell: {
+  column: {
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
+  },
+  todayBorderWrap: {
+    width: "100%",
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 4,
+    alignItems: "center",
+  },
+  todayBorderInner: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  weekdayCell: {
+    height: WEEKDAY_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: WEEKDAY_MARGIN_BOTTOM,
   },
   weekdayText: {
     fontSize: 13,
     color: theme.textSecondary,
   },
-  dateRow: {
-    flexDirection: "row",
-    marginLeft: 0,
-    paddingLeft: 0,
-  },
   dateCell: {
-    alignItems: "center",
     justifyContent: "center",
-    overflow: "visible",
   },
-  dateInner: {
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "visible",
-  },
-  dateTextBox: {},
   dateText: {
     fontSize: 14,
     color: theme.text,
     textAlign: "center",
   },
   dateTextToday: {
-    color: "#fff",
-    fontWeight: "600",
+    fontWeight: "700",
+    color: theme.text,
   },
 });
