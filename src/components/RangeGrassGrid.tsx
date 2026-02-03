@@ -1,11 +1,10 @@
 import React, { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { useGrassColor } from "../contexts/GrassColorContext";
 import { DayCell } from "./DayCell";
 
 const CELL_GAP = 6;
-const COLUMNS = 15;
-const GRID_HORIZONTAL_PADDING = 80;
+const COLUMNS = 16;
+const GRID_HORIZONTAL_PADDING = 40;
 
 interface RangeGrassGridProps {
   totalDays: number;
@@ -18,7 +17,6 @@ export function RangeGrassGrid({
   elapsedDays,
   cellSize: cellSizeProp,
 }: RangeGrassGridProps) {
-  useGrassColor();
   const { width } = useWindowDimensions();
   const cellSize = useMemo(() => {
     if (cellSizeProp != null) return cellSizeProp;

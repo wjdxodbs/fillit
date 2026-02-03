@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { GrassColorPicker } from "../components/GrassColorPicker";
 import { WeekDateStrip } from "../components/WeekDateStrip";
 import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
@@ -34,7 +33,6 @@ export function HomeScreen() {
       <View style={styles.headerWrap}>
         <View style={styles.headerRow}>
           <YearMonthHeader year={year} month={month} />
-          <GrassColorPicker />
         </View>
       </View>
       <View style={styles.dateStripWrap}>
@@ -59,21 +57,16 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
   },
-  headerWrap: {
-    paddingHorizontal: 20,
-  },
+  headerWrap: {},
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     marginBottom: 14,
   },
   dateStripWrap: {
     width: "100%",
   },
-  progressWrap: {
-    paddingHorizontal: 20,
-  },
+  progressWrap: {},
   progress: {
     fontSize: 16,
     color: theme.textSecondary,
@@ -81,7 +74,6 @@ const styles = StyleSheet.create({
   },
   gridWrap: {
     width: "100%",
-    paddingHorizontal: 20,
     alignItems: "center",
   },
 });

@@ -1,11 +1,11 @@
 import React from "react";
+import { View, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { GrassColorProvider } from "./src/contexts/GrassColorContext";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { DatesListScreen } from "./src/screens/DatesListScreen";
 import { DateDetailScreen } from "./src/screens/DateDetailScreen";
@@ -50,8 +50,18 @@ function DatesStackScreen() {
       <DatesStack.Screen
         name="DateDetail"
         component={DateDetailScreen}
-        options={({ route }) => ({
+        options={({ navigation, route }) => ({
           title: (route.params as { title: string }).title,
+          headerTitleAlign: "center",
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{ marginLeft: 8, padding: 8 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Ionicons name="chevron-back" size={22} color={theme.text} />
+            </TouchableOpacity>
+          ),
         })}
       />
     </DatesStack.Navigator>
@@ -61,18 +71,48 @@ function DatesStackScreen() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <GrassColorProvider>
-        <NavigationContainer theme={AppTheme}>
-          <StatusBar style="light" />
+      <NavigationContainer theme={AppTheme}>
+        <StatusBar style="light" />
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
           <Tab.Navigator
             screenOptions={{
               headerShown: false,
               tabBarStyle: {
-                backgroundColor: theme.backgroundSecondary,
-                borderTopColor: theme.border,
+                backgroundColor: "transparent",
+                borderTopWidth: 0,
+                height: 72,
               },
+              tabBarBackground: () => (
+                <View
+                  style={{
+                    flex: 1,
+                    backgroundColor: theme.backgroundSecondary,
+                    borderTopLeftRadius: 20,
+                    borderTopRightRadius: 20,
+                    elevation: 8,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: -2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                  }}
+                />
+              ),
               tabBarActiveTintColor: theme.tabActive,
               tabBarInactiveTintColor: theme.tabInactive,
+              tabBarButton: (props) => (
+                <TouchableOpacity
+                  activeOpacity={0.65}
+                  onPress={props.onPress}
+                  onLongPress={props.onLongPress ?? undefined}
+                  delayLongPress={props.delayLongPress ?? undefined}
+                  style={[props.style, { borderRadius: 12 }]}
+                  accessibilityRole={props.accessibilityRole}
+                  accessibilityLabel={props.accessibilityLabel}
+                  accessibilityState={props.accessibilityState}
+                >
+                  {props.children}
+                </TouchableOpacity>
+              ),
             }}
           >
             <Tab.Screen
@@ -93,7 +133,7 @@ export default function App() {
               name="Dates"
               component={DatesStackScreen}
               options={{
-                tabBarLabel: "등록한 날짜",
+                tabBarLabel: "목표일 설정",
                 tabBarIcon: ({ focused, color, size }) => (
                   <Ionicons
                     name={focused ? "calendar" : "calendar-outline"}
@@ -104,8 +144,8 @@ export default function App() {
               }}
             />
           </Tab.Navigator>
-        </NavigationContainer>
-      </GrassColorProvider>
+        </View>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }

@@ -1,12 +1,11 @@
 import React, { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { useGrassColor } from "../contexts/GrassColorContext";
 import { DayCell } from "./DayCell";
 
 const CELL_GAP = 6;
-const COLUMNS = 15;
-/** 홈/상세 화면 좌우 패딩 합계(ScrollView 20*2 + gridWrap 20*2) → 잔디 좌우 공백 항상 동일 */
-const GRID_HORIZONTAL_PADDING = 80;
+const COLUMNS = 16;
+/** 홈/상세 화면 좌우 패딩 합계(content 20*2) → 잔디 크기 계산 */
+const GRID_HORIZONTAL_PADDING = 40;
 
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -41,7 +40,6 @@ export function YearGrassGrid({
   cellSize: cellSizeProp,
   highlightEndDate = true,
 }: YearGrassGridProps) {
-  useGrassColor(); // 구독: 색 변경 시 그리드 재렌더
   const { width } = useWindowDimensions();
   const cellSize = useMemo(() => {
     if (cellSizeProp != null) return cellSizeProp;
@@ -87,10 +85,10 @@ export function YearGrassGrid({
             let state: "empty" | "filled" | "today" | "highlight" = filled
               ? "filled"
               : "empty";
-            if (filled && highlightEndDate && isEndDay) {
-              state = "highlight";
-            } else if (filled && isToday && highlightEndDate) {
+            if (filled && highlightEndDate && isToday) {
               state = "today";
+            } else if (filled && highlightEndDate && isEndDay) {
+              state = "highlight";
             }
 
             return (
