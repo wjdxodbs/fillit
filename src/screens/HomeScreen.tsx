@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { YearGrassGrid } from '../components/YearGrassGrid';
-import { theme } from '../theme';
+import React, { useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { GrassColorPicker } from "../components/GrassColorPicker";
+import { WeekDateStrip } from "../components/WeekDateStrip";
+import { YearGrassGrid } from "../components/YearGrassGrid";
+import { YearMonthHeader } from "../components/YearMonthHeader";
+import { theme } from "../theme";
 
 function getProgressPercent(year: number, endDate: Date): number {
-  const isLeap = (y: number) =>
-    (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const isLeap = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
   const daysInYear = isLeap(year) ? 366 : 365;
   const start = new Date(year, 0, 0);
   const diff = endDate.getTime() - start.getTime();
@@ -14,8 +16,10 @@ function getProgressPercent(year: number, endDate: Date): number {
 }
 
 export function HomeScreen() {
-  const year = new Date().getFullYear();
   const today = useMemo(() => new Date(), []);
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const date = today.getDate();
   const progress = useMemo(
     () => getProgressPercent(year, today),
     [year, today]
@@ -27,10 +31,20 @@ export function HomeScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>{year}년</Text>
-      <Text style={styles.progress}>{progress}% 완료</Text>
+      <View style={styles.headerWrap}>
+        <View style={styles.headerRow}>
+          <YearMonthHeader year={year} month={month} />
+          <GrassColorPicker />
+        </View>
+      </View>
+      <View style={styles.dateStripWrap}>
+        <WeekDateStrip year={year} month={month} todayDate={date} />
+      </View>
+      <View style={styles.progressWrap}>
+        <Text style={styles.progress}>{progress}% 완료</Text>
+      </View>
       <View style={styles.gridWrap}>
-        <YearGrassGrid year={year} endDate={today} cellSize={10} />
+        <YearGrassGrid year={year} endDate={today} />
       </View>
     </ScrollView>
   );
@@ -45,11 +59,20 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.text,
-    marginBottom: 4,
+  headerWrap: {
+    paddingHorizontal: 20,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  dateStripWrap: {
+    width: "100%",
+  },
+  progressWrap: {
+    paddingHorizontal: 20,
   },
   progress: {
     fontSize: 16,
@@ -57,6 +80,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   gridWrap: {
-    alignSelf: 'flex-start',
+    width: "100%",
+    paddingHorizontal: 20,
+    alignItems: "center",
   },
 });
