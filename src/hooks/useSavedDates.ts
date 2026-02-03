@@ -15,17 +15,15 @@ export function useSavedDates() {
   const load = useCallback(async () => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      const parsed: unknown[] = raw ? JSON.parse(raw) : [];
-      const migrated: SavedDate[] = parsed.map(
-        (item: Record<string, unknown>) => {
-          const id = String(item.id ?? "");
-          const title = String(item.title ?? "");
-          const date = item.date as string | undefined;
-          const baseDate = (item.baseDate as string) ?? date ?? "";
-          const targetDate = (item.targetDate as string) ?? date ?? "";
-          return { id, title, baseDate, targetDate };
-        }
-      );
+      const parsed = (raw ? JSON.parse(raw) : []) as Record<string, unknown>[];
+      const migrated: SavedDate[] = parsed.map((item) => {
+        const id = String(item.id ?? "");
+        const title = String(item.title ?? "");
+        const date = item.date as string | undefined;
+        const baseDate = (item.baseDate as string) ?? date ?? "";
+        const targetDate = (item.targetDate as string) ?? date ?? "";
+        return { id, title, baseDate, targetDate };
+      });
       setDates(migrated);
     } catch {
       setDates([]);
