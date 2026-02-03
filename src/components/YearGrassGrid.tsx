@@ -1,7 +1,12 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { DayCell } from './DayCell';
-import { theme } from '../theme';
+import React, { useMemo } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { useGrassColor } from "../contexts/GrassColorContext";
+import { DayCell } from "./DayCell";
+
+const CELL_GAP = 6;
+const COLUMNS = 15;
+/** 홈/상세 화면 좌우 패딩 합계(ScrollView 20*2 + gridWrap 20*2) → 잔디 좌우 공백 항상 동일 */
+const GRID_HORIZONTAL_PADDING = 80;
 
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -24,6 +29,7 @@ function isSameDay(a: Date, b: Date): boolean {
 interface YearGrassGridProps {
   year: number;
   endDate: Date | string;
+  startDate?: Date | string;
   cellSize?: number;
   highlightEndDate?: boolean;
 }
@@ -31,32 +37,38 @@ interface YearGrassGridProps {
 export function YearGrassGrid({
   year,
   endDate,
-  cellSize = 10,
+  startDate: startDateProp,
+  cellSize: cellSizeProp,
   highlightEndDate = true,
 }: YearGrassGridProps) {
-  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  useGrassColor(); // 구독: 색 변경 시 그리드 재렌더
+  const { width } = useWindowDimensions();
+  const cellSize = useMemo(() => {
+    if (cellSizeProp != null) return cellSizeProp;
+    const available = width - GRID_HORIZONTAL_PADDING;
+    const size = Math.floor((available - (COLUMNS - 1) * CELL_GAP) / COLUMNS);
+    return Math.max(1, size);
+  }, [width, cellSizeProp]);
+
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate;
+  const start = startDateProp
+    ? typeof startDateProp === "string"
+      ? new Date(startDateProp)
+      : startDateProp
+    : null;
   const endDayOfYear = end.getFullYear() === year ? getDayOfYear(end) : 0;
+  const startDayOfYear =
+    start && start.getFullYear() === year ? getDayOfYear(start) : 1;
 
-  const { rows, daysInYear } = useMemo(() => {
+  const { rows } = useMemo(() => {
     const daysInYear = isLeapYear(year) ? 366 : 365;
-    const jan1 = new Date(year, 0, 1);
-    const startWeekday = jan1.getDay();
-
-    const cells: Array<{ dayOfYear: number | null }> = [];
-    for (let i = 0; i < startWeekday; i++) {
-      cells.push({ dayOfYear: null });
+    const days: number[] = [];
+    for (let d = 1; d <= daysInYear; d++) days.push(d);
+    const rows: number[][] = [];
+    for (let i = 0; i < days.length; i += COLUMNS) {
+      rows.push(days.slice(i, i + COLUMNS));
     }
-    for (let d = 1; d <= daysInYear; d++) {
-      cells.push({ dayOfYear: d });
-    }
-
-    const rows: Array<Array<{ dayOfYear: number | null }>> = [];
-    for (let i = 0; i < cells.length; i += 7) {
-      const row = cells.slice(i, i + 7);
-      while (row.length < 7) row.push({ dayOfYear: null });
-      rows.push(row);
-    }
-    return { rows, daysInYear };
+    return { rows };
   }, [year]);
 
   const today = useMemo(() => new Date(), []);
@@ -64,37 +76,34 @@ export function YearGrassGrid({
   return (
     <View style={styles.container}>
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={styles.row}>
-          {row.map((cell, colIndex) => {
-            if (cell.dayOfYear === null) {
-              return (
-                <View
-                  key={`${rowIndex}-${colIndex}`}
-                  style={[styles.cellWrapper, { width: cellSize, height: cellSize }]}
-                >
-                  <DayCell state="empty" size={cellSize} />
-                </View>
-              );
-            }
-            const dayOfYear = cell.dayOfYear;
-            const filled = dayOfYear <= endDayOfYear;
+        <View key={rowIndex} style={[styles.row, { marginBottom: CELL_GAP }]}>
+          {row.map((dayOfYear, colIndex) => {
+            const filled =
+              dayOfYear >= startDayOfYear && dayOfYear <= endDayOfYear;
             const isEndDay = dayOfYear === endDayOfYear;
             const cellDate = new Date(year, 0, dayOfYear);
             const isToday = isSameDay(cellDate, today);
 
-            let state: 'empty' | 'filled' | 'today' | 'highlight' = filled
-              ? 'filled'
-              : 'empty';
+            let state: "empty" | "filled" | "today" | "highlight" = filled
+              ? "filled"
+              : "empty";
             if (filled && highlightEndDate && isEndDay) {
-              state = 'highlight';
+              state = "highlight";
             } else if (filled && isToday && highlightEndDate) {
-              state = 'today';
+              state = "today";
             }
 
             return (
               <View
                 key={`${rowIndex}-${colIndex}`}
-                style={[styles.cellWrapper, { width: cellSize, height: cellSize }]}
+                style={[
+                  styles.cellWrapper,
+                  {
+                    width: cellSize,
+                    height: cellSize,
+                    marginRight: colIndex < row.length - 1 ? CELL_GAP : 0,
+                  },
+                ]}
               >
                 <DayCell state={state} size={cellSize} />
               </View>
@@ -109,12 +118,10 @@ export function YearGrassGrid({
 const styles = StyleSheet.create({
   container: {},
   row: {
-    flexDirection: 'row',
-    marginBottom: 2,
+    flexDirection: "row",
   },
   cellWrapper: {
-    marginRight: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
