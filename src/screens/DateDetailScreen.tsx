@@ -73,7 +73,6 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   topSection: {
-    paddingHorizontal: 20,
     marginBottom: 0,
   },
   date: {
@@ -90,7 +89,6 @@ const styles = StyleSheet.create({
   },
   gridWrap: {
     width: "100%",
-    paddingHorizontal: 20,
     alignItems: "center",
   },
 });

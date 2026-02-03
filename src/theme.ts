@@ -1,15 +1,18 @@
+/** 앱 메인 색상 */
+export const MAIN_COLOR = "#00C49A";
+
 export const theme = {
   background: "#121212",
   backgroundSecondary: "#1a1a1a",
   surface: "#252525",
   text: "#e0e0e0",
   textSecondary: "#9e9e9e",
-  grassFilled: "#26a69a",
+  grassFilled: MAIN_COLOR,
   grassEmpty: "#2d2d2d",
-  grassToday: "#4db6ac",
-  grassTodayCell: "#147a6f", // 오늘 날짜 잔디 셀 (다른 셀보다 진하게)
-  grassHighlight: "#80cbc4",
+  grassToday: "#4dd4b0",
+  grassTodayCell: "#00a87d",
+  grassHighlight: "#5dd4b0",
   border: "#333333",
-  tabActive: "#26a69a",
+  tabActive: MAIN_COLOR,
   tabInactive: "#757575",
 } as const;
