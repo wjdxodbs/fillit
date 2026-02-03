@@ -1,42 +1,46 @@
-import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { YearGrassGrid } from '../components/YearGrassGrid';
-import { theme } from '../theme';
-
-function getProgressPercent(year: number, endDate: Date): number {
-  const isLeap = (y: number) =>
-    (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
-  const daysInYear = isLeap(year) ? 366 : 365;
-  const start = new Date(year, 0, 0);
-  const diff = endDate.getTime() - start.getTime();
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-  return Math.min(100, Math.round((dayOfYear / daysInYear) * 100));
-}
+import React, { useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { RangeGrassGrid } from "../components/RangeGrassGrid";
+import { theme } from "../theme";
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00');
+  const d = new Date(dateStr + "T12:00:00");
+  const y = d.getFullYear();
   const m = d.getMonth() + 1;
   const day = d.getDate();
-  return `${m}월 ${day}일`;
+  return `${y}년 ${m}월 ${day}일`;
+}
+
+function getDaysBetween(base: Date, target: Date): number {
+  const a = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+  const b = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 }
 
 type DateDetailScreenProps = {
-  route: { params: { title: string; date: string } };
+  route: { params: { title: string; baseDate: string; targetDate: string } };
 };
 
 export function DateDetailScreen({ route }: DateDetailScreenProps) {
-  const { title, date } = route.params;
-  const endDate = useMemo(() => new Date(date + 'T12:00:00'), [date]);
-  const year = endDate.getFullYear();
-  const progress = useMemo(
-    () => getProgressPercent(year, endDate),
-    [year, endDate]
+  const { baseDate, targetDate } = route.params;
+  const base = useMemo(() => new Date(baseDate + "T12:00:00"), [baseDate]);
+  const target = useMemo(
+    () => new Date(targetDate + "T12:00:00"),
+    [targetDate]
   );
-  const dayOfYear = useMemo(() => {
-    const start = new Date(year, 0, 0);
-    const diff = endDate.getTime() - start.getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
-  }, [year, endDate]);
+  const totalBlocks = useMemo(
+    () => getDaysBetween(base, target),
+    [base, target]
+  );
+  const today = useMemo(() => new Date(), []);
+  const todayTime = today.getTime();
+  const elapsedDays = useMemo(() => {
+    if (todayTime < base.getTime()) return 0;
+    if (todayTime > target.getTime()) return totalBlocks;
+    return getDaysBetween(base, today);
+  }, [base, target, todayTime, totalBlocks]);
+  const progress =
+    totalBlocks > 0 ? Math.round((elapsedDays / totalBlocks) * 100) : 0;
 
   return (
     <ScrollView
@@ -44,18 +48,16 @@ export function DateDetailScreen({ route }: DateDetailScreenProps) {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.date}>{formatDate(date)}</Text>
-      <Text style={styles.progress}>
-        {year}년 {dayOfYear}일 경과 ({progress}%)
-      </Text>
+      <View style={styles.topSection}>
+        <Text style={styles.date}>
+          {formatDate(baseDate)} ~ {formatDate(targetDate)}
+        </Text>
+        <View style={styles.progressWrap}>
+          <Text style={styles.progress}>{progress}% 완료</Text>
+        </View>
+      </View>
       <View style={styles.gridWrap}>
-        <YearGrassGrid
-          year={year}
-          endDate={date}
-          cellSize={10}
-          highlightEndDate={true}
-        />
+        <RangeGrassGrid totalDays={totalBlocks} elapsedDays={elapsedDays} />
       </View>
     </ScrollView>
   );
@@ -70,23 +72,25 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: theme.text,
-    marginBottom: 4,
+  topSection: {
+    paddingHorizontal: 20,
+    marginBottom: 0,
   },
   date: {
     fontSize: 16,
     color: theme.textSecondary,
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  progress: {
-    fontSize: 14,
-    color: theme.textSecondary,
+  progressWrap: {
     marginBottom: 16,
   },
+  progress: {
+    fontSize: 16,
+    color: theme.text,
+  },
   gridWrap: {
-    alignSelf: 'flex-start',
+    width: "100%",
+    paddingHorizontal: 20,
+    alignItems: "center",
   },
 });
