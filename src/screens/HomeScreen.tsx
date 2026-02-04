@@ -30,7 +30,7 @@ export function HomeScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.headerWrap}>
+      <View>
         <View style={styles.headerRow}>
           <YearMonthHeader year={year} month={month} />
         </View>
@@ -38,7 +38,7 @@ export function HomeScreen() {
       <View style={styles.dateStripWrap}>
         <WeekDateStrip year={year} month={month} todayDate={date} />
       </View>
-      <View style={styles.progressWrap}>
+      <View>
         <Text style={styles.progress}>{progress}% 완료</Text>
       </View>
       <View style={styles.gridWrap}>
@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
   },
-  headerWrap: {},
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -66,7 +65,6 @@ const styles = StyleSheet.create({
   dateStripWrap: {
     width: "100%",
   },
-  progressWrap: {},
   progress: {
     fontSize: 16,
     color: theme.textSecondary,

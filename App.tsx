@@ -25,7 +25,7 @@ const AppTheme = {
   },
 };
 
-export type DatesStackParamList = {
+type DatesStackParamList = {
   DatesList: undefined;
   DateDetail: { title: string; baseDate: string; targetDate: string };
 };
