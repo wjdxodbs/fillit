@@ -1,15 +1,18 @@
-import React from "react";
-import { View, TouchableOpacity } from "react-native";
+import React, { useEffect } from "react";
+import { Platform, View, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { requestWidgetUpdate } from "react-native-android-widget";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { DatesListScreen } from "./src/screens/DatesListScreen";
 import { DateDetailScreen } from "./src/screens/DateDetailScreen";
 import { theme } from "./src/theme";
+import { FillitGrassWidget } from "./src/widgets/FillitGrassWidget";
+import { getWidgetDataForConfig } from "./src/widgets/widget-task-handler";
 
 const AppTheme = {
   ...DefaultTheme,
@@ -69,6 +72,29 @@ function DatesStackScreen() {
 }
 
 export default function App() {
+  // 앱이 열릴 때마다 위젯 갱신 (자정 알람 실패 대비)
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      requestWidgetUpdate({
+        widgetName: "FillitGrass",
+        renderWidget: async (widgetInfo) => {
+          const data = await getWidgetDataForConfig(widgetInfo.widgetId);
+          return (
+            <FillitGrassWidget
+              title={data.title}
+              baseDate={data.baseDate}
+              targetDate={data.targetDate}
+              filledUpTo={data.filledUpTo}
+              totalDays={data.totalDays}
+            />
+          );
+        },
+      }).catch(() => {
+        // 위젯이 없으면 무시
+      });
+    }
+  }, []);
+
   return (
     <SafeAreaProvider>
       <NavigationContainer theme={AppTheme}>

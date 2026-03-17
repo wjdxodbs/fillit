@@ -23,7 +23,8 @@ class MidnightWidgetUpdateReceiver : BroadcastReceiver() {
                 scheduleNextMidnight(context)
             }
             Intent.ACTION_BOOT_COMPLETED -> {
-                // 재부팅 후 다음 자정 알람만 스케줄
+                // 재부팅 후 위젯 갱신 + 다음 자정 알람 스케줄
+                RNWidgetJsCommunication.requestWidgetUpdate(context, "FillitGrass")
                 scheduleNextMidnight(context)
             }
         }
@@ -56,14 +57,8 @@ class MidnightWidgetUpdateReceiver : BroadcastReceiver() {
                 (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
             val pending = PendingIntent.getBroadcast(context, REQUEST_CODE, intent, flags)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMidnight, pending)
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMidnight, pending)
-            } else {
-                @Suppress("DEPRECATION")
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextMidnight, pending)
-            }
+            // 비정확 알람 사용 (자정 근처에 실행됨, 권한 불필요)
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMidnight, pending)
         }
     }
 }
