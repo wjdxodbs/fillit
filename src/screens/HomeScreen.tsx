@@ -1,13 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { WeekDateStrip } from "../components/WeekDateStrip";
 import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
 import { theme } from "../theme";
+import { isLeapYear } from "../utils/dateUtils";
 
 function getProgressPercent(year: number, endDate: Date): number {
-  const isLeap = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
-  const daysInYear = isLeap(year) ? 366 : 365;
+  const daysInYear = isLeapYear(year) ? 366 : 365;
   const start = new Date(year, 0, 0);
   const diff = endDate.getTime() - start.getTime();
   const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -15,14 +16,16 @@ function getProgressPercent(year: number, endDate: Date): number {
 }
 
 export function HomeScreen() {
-  const today = useMemo(() => new Date(), []);
+  const [today, setToday] = useState(() => new Date());
+  useFocusEffect(
+    useCallback(() => {
+      setToday(new Date());
+    }, [])
+  );
   const year = today.getFullYear();
   const month = today.getMonth();
   const date = today.getDate();
-  const progress = useMemo(
-    () => getProgressPercent(year, today),
-    [year, today]
-  );
+  const progress = getProgressPercent(year, today);
 
   return (
     <ScrollView
