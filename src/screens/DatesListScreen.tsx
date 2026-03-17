@@ -264,18 +264,9 @@ function ListItem({
 }) {
   const totalDays = getDaysBetween(item.baseDate, item.targetDate);
   const todayStr = useMemo(() => toDateStr(new Date()), []);
-  const base = new Date(item.baseDate + "T12:00:00");
-  const target = new Date(item.targetDate + "T12:00:00");
-  const today = new Date(todayStr + "T12:00:00");
-  base.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-  const baseTime = base.getTime();
-  const targetTime = target.getTime();
-  const todayTime = today.getTime();
   let elapsedDays = 0;
-  if (todayTime < baseTime) elapsedDays = 0;
-  else if (todayTime > targetTime) elapsedDays = totalDays;
+  if (todayStr < item.baseDate) elapsedDays = 0;
+  else if (todayStr > item.targetDate) elapsedDays = totalDays;
   else elapsedDays = getDaysBetween(item.baseDate, todayStr);
   const progressPercent =
     totalDays > 0 ? Math.round((elapsedDays / totalDays) * 100) : 0;
