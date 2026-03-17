@@ -1,12 +1,10 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { theme } from "../theme";
+import { CELL_GAP, GRID_HORIZONTAL_PADDING } from "./gridConstants";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
-const CELL_GAP = 6;
 const COLUMNS = 7;
-/** 잔디 그리드와 동일한 좌우 여백 */
-const GRID_HORIZONTAL_PADDING = 40;
 const WEEKDAY_HEIGHT = 20;
 const WEEKDAY_MARGIN_BOTTOM = 4;
 const BORDER_VERTICAL_PADDING = 8;

@@ -1,10 +1,7 @@
 import React, { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { DayCell } from "./DayCell";
-
-const CELL_GAP = 6;
-const COLUMNS = 16;
-const GRID_HORIZONTAL_PADDING = 40;
+import { COLUMNS, CELL_GAP, GRID_HORIZONTAL_PADDING } from "./gridConstants";
 
 interface RangeGrassGridProps {
   totalDays: number;

@@ -1,21 +1,8 @@
 import React, { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { DayCell } from "./DayCell";
-
-const CELL_GAP = 6;
-const COLUMNS = 16;
-/** 홈/상세 화면 좌우 패딩 합계(content 20*2) → 잔디 크기 계산 */
-const GRID_HORIZONTAL_PADDING = 40;
-
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-function getDayOfYear(date: Date): number {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-}
+import { isLeapYear, getDayOfYear } from "../utils/dateUtils";
+import { COLUMNS, CELL_GAP, GRID_HORIZONTAL_PADDING } from "./gridConstants";
 
 function isSameDay(a: Date, b: Date): boolean {
   return (
@@ -69,8 +56,6 @@ export function YearGrassGrid({
     return { rows };
   }, [year]);
 
-  const today = useMemo(() => new Date(), []);
-
   return (
     <View style={styles.container}>
       {rows.map((row, rowIndex) => (
@@ -80,7 +65,7 @@ export function YearGrassGrid({
               dayOfYear >= startDayOfYear && dayOfYear <= endDayOfYear;
             const isEndDay = dayOfYear === endDayOfYear;
             const cellDate = new Date(year, 0, dayOfYear);
-            const isToday = isSameDay(cellDate, today);
+            const isToday = isSameDay(cellDate, end);
 
             let state: "empty" | "filled" | "today" | "highlight" = filled
               ? "filled"
