@@ -1,16 +1,13 @@
 import React from "react";
 import { FlexWidget, SvgWidget, TextWidget } from "react-native-android-widget";
+import { formatDate } from "../utils/dateUtils";
+import { theme } from "../theme";
 
-const GRASS_FILLED = "#00C49A";
-const GRASS_EMPTY = "#2d2d2d";
+const GRASS_FILLED = theme.grassFilled;
+const GRASS_EMPTY = theme.grassEmpty;
 const COLS = 16;
 const CELL_SIZE = 6;
 const GAP = 1;
-
-function formatDateForWidget(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return `${y}년 ${m}월 ${d}일`;
-}
 
 export interface FillitGrassWidgetProps {
   /** 제목 (올해면 "2026년", 목표일이면 항목 제목) */
@@ -51,13 +48,11 @@ export function FillitGrassWidget({
     return `<rect x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="2" fill="${fill}"/>`;
   });
 
-  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%">${rects.join(
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" preserveAspectRatio="none">${rects.join(
     ""
   )}</svg>`;
 
-  const dateRangeText = `${formatDateForWidget(
-    baseDate
-  )} ~ ${formatDateForWidget(targetDate)}`;
+  const dateRangeText = `${formatDate(baseDate)} ~ ${formatDate(targetDate)}`;
   const progress =
     totalDays > 0 ? Math.round((filledUpTo / totalDays) * 100) : 0;
   const progressText = `${progress}% 완료`;
@@ -67,20 +62,21 @@ export function FillitGrassWidget({
       style={{
         flexDirection: "column",
         padding: 12,
-        backgroundColor: "#121212",
+        paddingTop: 20,
+        backgroundColor: "#000000",
         width: "match_parent",
         height: "match_parent",
       }}
     >
       <TextWidget
         text={title}
-        style={{ color: "#e0e0e0", fontSize: 18, fontWeight: "600" }}
+        style={{ color: "#e0e0e0", fontSize: 24, fontWeight: "600" }}
       />
       <TextWidget
         text={dateRangeText}
         style={{
           color: "#9e9e9e",
-          fontSize: 13,
+          fontSize: 17,
           marginTop: 4,
         }}
       />
@@ -88,7 +84,7 @@ export function FillitGrassWidget({
         text={progressText}
         style={{
           color: "#9e9e9e",
-          fontSize: 12,
+          fontSize: 16,
           marginTop: 2,
         }}
       />
