@@ -15,7 +15,9 @@ export function DayCell({ state, size = 10 }: DayCellProps) {
       ? theme.grassEmpty
       : state === "today"
         ? theme.grassTodayCell
-        : theme.grassFilled;
+        : state === "highlight"
+          ? theme.grassHighlight
+          : theme.grassFilled;
 
   return (
     <View

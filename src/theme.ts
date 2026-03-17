@@ -10,6 +10,7 @@ export const theme = {
   grassFilled: MAIN_COLOR,
   grassEmpty: "#2d2d2d",
   grassTodayCell: "#00a87d",
+  grassHighlight: "#e0e0e0",
   border: "#333333",
   tabActive: MAIN_COLOR,
   tabInactive: "#757575",
