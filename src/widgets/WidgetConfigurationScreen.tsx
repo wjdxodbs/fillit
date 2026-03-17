@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -23,14 +23,9 @@ import {
 import type { WidgetConfig } from "./widget-config";
 import { widgetConfigKey } from "./widget-config";
 import type { SavedDate } from "../types";
+import { useSavedDates } from "../hooks/useSavedDates";
+import { formatDate } from "../utils/dateUtils";
 import { theme } from "../theme";
-
-const SAVED_DATES_KEY = "saved_dates";
-
-function formatDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return `${y}년 ${m}월 ${d}일`;
-}
 
 const MIN_VALID_WIDTH = 200;
 function getFallbackWidth(): number {
@@ -54,35 +49,9 @@ export function WidgetConfigurationScreen({
       ? windowWidth
       : fallbackWidth;
   const [layoutWidth, setLayoutWidth] = useState<number | null>(null);
-  const [savedDates, setSavedDates] = useState<SavedDate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { dates: savedDates, loading } = useSavedDates();
 
   const width = layoutWidth ?? effectiveWidth;
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem(SAVED_DATES_KEY);
-        const parsed = (raw ? JSON.parse(raw) : []) as Record<
-          string,
-          unknown
-        >[];
-        const migrated: SavedDate[] = parsed.map((item) => {
-          const id = String(item.id ?? "");
-          const title = String(item.title ?? "");
-          const date = item.date as string | undefined;
-          const baseDate = (item.baseDate as string) ?? date ?? "";
-          const targetDate = (item.targetDate as string) ?? date ?? "";
-          return { id, title, baseDate, targetDate };
-        });
-        setSavedDates(migrated);
-      } catch {
-        setSavedDates([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
 
   const finishWith = useCallback(
     async (config: WidgetConfig) => {
