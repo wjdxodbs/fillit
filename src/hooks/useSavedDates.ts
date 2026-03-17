@@ -44,32 +44,38 @@ export function useSavedDates() {
         baseDate,
         targetDate,
       };
-      const next = [...dates, newItem];
-      setDates(next);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setDates((prev) => {
+        const next = [...prev, newItem];
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
       return newItem;
     },
-    [dates]
+    []
   );
 
   const update = useCallback(
     async (id: string, title: string, baseDate: string, targetDate: string) => {
-      const next = dates.map((d) =>
-        d.id === id ? { ...d, title, baseDate, targetDate } : d
-      );
-      setDates(next);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setDates((prev) => {
+        const next = prev.map((d) =>
+          d.id === id ? { ...d, title, baseDate, targetDate } : d
+        );
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     },
-    [dates]
+    []
   );
 
   const remove = useCallback(
     async (id: string) => {
-      const next = dates.filter((d) => d.id !== id);
-      setDates(next);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setDates((prev) => {
+        const next = prev.filter((d) => d.id !== id);
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
     },
-    [dates]
+    []
   );
 
   return { dates, loading, add, update, remove, refresh: load };
