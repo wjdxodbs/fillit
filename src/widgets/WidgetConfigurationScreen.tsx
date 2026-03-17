@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -28,14 +27,6 @@ import { formatDate } from "../utils/dateUtils";
 import { theme } from "../theme";
 
 const MIN_VALID_WIDTH = 200;
-function getFallbackWidth(): number {
-  try {
-    const w = Dimensions.get("window").width;
-    return typeof w === "number" && w >= MIN_VALID_WIDTH ? w : 360;
-  } catch {
-    return 360;
-  }
-}
 
 export function WidgetConfigurationScreen({
   widgetInfo,
@@ -43,11 +34,7 @@ export function WidgetConfigurationScreen({
   setResult,
 }: WidgetConfigurationScreenProps) {
   const { width: windowWidth } = useWindowDimensions();
-  const fallbackWidth = getFallbackWidth();
-  const effectiveWidth =
-    typeof windowWidth === "number" && windowWidth >= MIN_VALID_WIDTH
-      ? windowWidth
-      : fallbackWidth;
+  const effectiveWidth = windowWidth >= MIN_VALID_WIDTH ? windowWidth : 360;
   const [layoutWidth, setLayoutWidth] = useState<number | null>(null);
   const { dates: savedDates, loading } = useSavedDates();
 

@@ -8,14 +8,6 @@ import { StatsCard } from "../components/StatsCard";
 import { theme } from "../theme";
 import { isLeapYear, getDayOfYear } from "../utils/dateUtils";
 
-function getProgressPercent(year: number, endDate: Date): number {
-  const daysInYear = isLeapYear(year) ? 366 : 365;
-  const start = new Date(year, 0, 0);
-  const diff = endDate.getTime() - start.getTime();
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-  return Math.min(100, Math.round((dayOfYear / daysInYear) * 100));
-}
-
 export function HomeScreen() {
   const [today, setToday] = useState(() => new Date());
   useFocusEffect(
@@ -26,10 +18,10 @@ export function HomeScreen() {
   const year = today.getFullYear();
   const month = today.getMonth();
   const date = today.getDate();
-  const progress = getProgressPercent(year, today);
   const daysInYear = isLeapYear(year) ? 366 : 365;
   const elapsed = getDayOfYear(today);
   const remaining = daysInYear - elapsed;
+  const progress = Math.min(100, Math.round((elapsed / daysInYear) * 100));
 
   return (
     <ScrollView

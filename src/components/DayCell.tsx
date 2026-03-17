@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { theme } from "../theme";
 
 type CellState = "empty" | "filled" | "today" | "highlight";
@@ -21,19 +21,12 @@ export function DayCell({ state, size = 10 }: DayCellProps) {
 
   return (
     <View
-      style={[
-        styles.cell,
-        {
-          width: size,
-          height: size,
-          borderRadius: size * 0.25,
-          backgroundColor,
-        },
-      ]}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.25,
+        backgroundColor,
+      }}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  cell: {},
-});

@@ -4,7 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RangeGrassGrid } from "../components/RangeGrassGrid";
 import { StatsCard } from "../components/StatsCard";
 import { theme } from "../theme";
-import { getDaysBetween, formatDate, toDateStr } from "../utils/dateUtils";
+import { getDaysBetween, getElapsedDays, formatDate, toDateStr } from "../utils/dateUtils";
 
 type DateDetailScreenProps = {
   route: { params: { title: string; baseDate: string; targetDate: string } };
@@ -22,11 +22,11 @@ export function DateDetailScreen({ route }: DateDetailScreenProps) {
       setTodayStr(toDateStr(new Date()));
     }, [])
   );
-  const elapsedDays = useMemo(() => {
-    if (todayStr < baseDate) return 0;
-    if (todayStr > targetDate) return totalBlocks;
-    return getDaysBetween(baseDate, todayStr);
-  }, [baseDate, targetDate, todayStr, totalBlocks]);
+  const isCompleted = todayStr > targetDate;
+  const elapsedDays = useMemo(
+    () => getElapsedDays(baseDate, targetDate, totalBlocks, todayStr),
+    [baseDate, targetDate, totalBlocks, todayStr]
+  );
   const progress =
     totalBlocks > 0 ? Math.round((elapsedDays / totalBlocks) * 100) : 0;
   const remainingDays = totalBlocks - elapsedDays;
@@ -44,7 +44,7 @@ export function DateDetailScreen({ route }: DateDetailScreenProps) {
         subtitle={`${formatDate(baseDate)} ~ ${formatDate(targetDate)}`}
       />
       <View style={styles.gridWrap}>
-        <RangeGrassGrid totalDays={totalBlocks} elapsedDays={elapsedDays} />
+        <RangeGrassGrid totalDays={totalBlocks} elapsedDays={elapsedDays} isCompleted={isCompleted} />
       </View>
     </ScrollView>
   );

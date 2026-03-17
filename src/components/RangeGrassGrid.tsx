@@ -1,26 +1,24 @@
 import React, { useMemo } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { DayCell } from "./DayCell";
-import { COLUMNS, CELL_GAP, GRID_HORIZONTAL_PADDING } from "./gridConstants";
+import { COLUMNS, CELL_GAP } from "./gridConstants";
+import { useCellSize } from "../hooks/useCellSize";
 
 interface RangeGrassGridProps {
   totalDays: number;
   elapsedDays: number;
+  /** 오늘이 targetDate를 지난 경우 true. 마지막 셀을 highlight(목표 완료)로 표시 */
+  isCompleted?: boolean;
   cellSize?: number;
 }
 
 export function RangeGrassGrid({
   totalDays,
   elapsedDays,
+  isCompleted = false,
   cellSize: cellSizeProp,
 }: RangeGrassGridProps) {
-  const { width } = useWindowDimensions();
-  const cellSize = useMemo(() => {
-    if (cellSizeProp != null) return cellSizeProp;
-    const available = width - GRID_HORIZONTAL_PADDING;
-    const size = Math.floor((available - (COLUMNS - 1) * CELL_GAP) / COLUMNS);
-    return Math.max(1, size);
-  }, [width, cellSizeProp]);
+  const cellSize = useCellSize(cellSizeProp);
 
   const rows = useMemo(() => {
     const cells: number[] = [];
@@ -33,24 +31,26 @@ export function RangeGrassGrid({
   }, [totalDays]);
 
   return (
-    <View style={styles.container}>
+    <View>
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={[styles.row, { marginBottom: CELL_GAP }]}>
           {row.map((cellIndex, colIndex) => {
             const filled = cellIndex < elapsedDays;
             const isLastCell = cellIndex === totalDays - 1;
+            // 오늘 셀: 경과 마지막 칸이면서 목표 기간이 끝나지 않은 경우
+            // isCompleted=true(오늘 > targetDate)면 today 제외, highlight만 표시
             const isTodayCell =
               cellIndex === elapsedDays - 1 &&
               elapsedDays > 0 &&
-              elapsedDays < totalDays;
+              !isCompleted;
 
             let state: "empty" | "filled" | "today" | "highlight" = filled
               ? "filled"
               : "empty";
-            if (filled && isLastCell) {
-              state = "highlight";
-            } else if (filled && isTodayCell) {
+            if (filled && isTodayCell) {
               state = "today";
+            } else if (filled && isLastCell && isCompleted) {
+              state = "highlight";
             }
 
             return (
@@ -76,7 +76,6 @@ export function RangeGrassGrid({
 }
 
 const styles = StyleSheet.create({
-  container: {},
   row: {
     flexDirection: "row",
   },

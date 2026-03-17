@@ -5,14 +5,14 @@ import { toDateStr } from "../utils/dateUtils";
 export function useGoalForm(
   add: (title: string, baseDate: string, targetDate: string) => Promise<unknown>
 ) {
-  const today = useMemo(() => {
+  const [today, setToday] = useState(() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
     return t;
-  }, []);
+  });
 
   const oneYearLater = useMemo(
-    () => new Date(today.getFullYear() + 1, today.getMonth(), 0),
+    () => new Date(today.getFullYear() + 1, today.getMonth(), today.getDate()),
     [today]
   );
 
@@ -33,14 +33,17 @@ export function useGoalForm(
       viewMonth < oneYearLater.getMonth());
 
   const openAdd = useCallback(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    setToday(t);
     setTitle("");
-    setBaseDate(toDateStr(today));
+    setBaseDate(toDateStr(t));
     setTargetDate("");
-    setViewYear(today.getFullYear());
-    setViewMonth(today.getMonth());
+    setViewYear(t.getFullYear());
+    setViewMonth(t.getMonth());
     setShowDatePicker(false);
     setModalVisible(true);
-  }, [today]);
+  }, []);
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
@@ -126,12 +129,15 @@ export function useGoalForm(
       : oneYearLater;
   const calendarSelectedDate = showDatePicker === "base" ? baseDate : targetDate;
 
+  const canSave = title.trim().length > 0 && targetDate.length > 0;
+
   return {
     modalVisible,
     title,
     setTitle,
     baseDate,
     targetDate,
+    canSave,
     showDatePicker,
     viewYear,
     viewMonth,

@@ -28,6 +28,21 @@ export function toDateStr(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+/**
+ * baseDate~targetDate 구간에서 todayStr까지 경과 일수.
+ * 범위를 벗어나지 않음 (0 ~ totalDays).
+ */
+export function getElapsedDays(
+  baseDate: string,
+  targetDate: string,
+  totalDays: number,
+  todayStr: string
+): number {
+  if (todayStr < baseDate) return 0;
+  if (todayStr > targetDate) return totalDays;
+  return getDaysBetween(baseDate, todayStr);
+}
+
 /** "YYYY-MM-DD" → "YYYY년 M월 D일" */
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
