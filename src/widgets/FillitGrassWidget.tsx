@@ -63,19 +63,19 @@ export function FillitGrassWidget({
         flexDirection: "column",
         padding: 12,
         paddingTop: 20,
-        backgroundColor: "#000000",
+        backgroundColor: theme.background,
         width: "match_parent",
         height: "match_parent",
       }}
     >
       <TextWidget
         text={title}
-        style={{ color: "#e0e0e0", fontSize: 24, fontWeight: "600" }}
+        style={{ color: theme.text, fontSize: 24, fontWeight: "600" }}
       />
       <TextWidget
         text={dateRangeText}
         style={{
-          color: "#9e9e9e",
+          color: theme.textSecondary,
           fontSize: 17,
           marginTop: 4,
         }}
@@ -83,7 +83,7 @@ export function FillitGrassWidget({
       <TextWidget
         text={progressText}
         style={{
-          color: "#9e9e9e",
+          color: theme.textSecondary,
           fontSize: 16,
           marginTop: 2,
         }}
