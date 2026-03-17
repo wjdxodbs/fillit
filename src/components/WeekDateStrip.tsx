@@ -5,9 +5,7 @@ import { CELL_GAP, GRID_HORIZONTAL_PADDING } from "./gridConstants";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const COLUMNS = 7;
-const WEEKDAY_HEIGHT = 20;
-const WEEKDAY_MARGIN_BOTTOM = 4;
-const BORDER_VERTICAL_PADDING = 8;
+const CELL_VERTICAL_PADDING = 8;
 
 interface DayItem {
   date: number;
@@ -23,76 +21,54 @@ interface WeekDateStripProps {
 
 export function WeekDateStrip({ year, month, todayDate }: WeekDateStripProps) {
   const { width: screenWidth } = useWindowDimensions();
-  const { cellWidth, columnHeight } = useMemo(() => {
+  const cellWidth = useMemo(() => {
     const available = screenWidth - GRID_HORIZONTAL_PADDING;
     const totalGap = (COLUMNS - 1) * CELL_GAP;
-    const cw = Math.floor((available - totalGap) / COLUMNS);
-    const ch =
-      WEEKDAY_HEIGHT + WEEKDAY_MARGIN_BOTTOM + cw + BORDER_VERTICAL_PADDING * 2;
-    return { cellWidth: cw, columnHeight: ch };
+    return Math.floor((available - totalGap) / COLUMNS);
   }, [screenWidth]);
 
   const { days, weekdayLabels } = useMemo(() => {
     const days: DayItem[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(year, month, todayDate - i);
-      days.push({
-        date: d.getDate(),
-        weekday: d.getDay(),
-        isToday: i === 0,
-      });
+      days.push({ date: d.getDate(), weekday: d.getDay(), isToday: i === 0 });
     }
-    const weekdayLabels = days.map((d) => WEEKDAYS[d.weekday]);
-    return { days, weekdayLabels };
+    return { days, weekdayLabels: days.map((d) => WEEKDAYS[d.weekday]) };
   }, [year, month, todayDate]);
 
   return (
     <View style={styles.container}>
       <View style={styles.columnsRow}>
-        {days.map((d, i) => {
-          const label = weekdayLabels[i];
-          const columnStyle = {
-            width: cellWidth,
-            height: columnHeight,
-            marginRight: i < 6 ? CELL_GAP : 0,
-          };
-          const innerCellStyle = { width: cellWidth };
-          const content = (
-            <>
-              <View style={[styles.weekdayCell, innerCellStyle]}>
-                <Text style={styles.weekdayText}>{label}</Text>
-              </View>
-              <View
-                style={[styles.dateCell, innerCellStyle, { height: cellWidth }]}
+        {days.map((d, i) => (
+          <View
+            key={i}
+            style={[
+              styles.column,
+              { width: cellWidth, marginRight: i < 6 ? CELL_GAP : 0 },
+            ]}
+          >
+            {d.isToday && (
+              <View style={[StyleSheet.absoluteFill, styles.todayBg]} />
+            )}
+            <View style={[styles.weekdayCell, { width: cellWidth }]}>
+              <Text
+                style={[
+                  styles.weekdayText,
+                  d.isToday && styles.weekdayTextToday,
+                ]}
               >
-                <Text
-                  style={[styles.dateText, d.isToday && styles.dateTextToday]}
-                >
-                  {String(d.date)}
-                </Text>
-              </View>
-            </>
-          );
-          if (d.isToday) {
-            return (
-              <View key={i} style={[styles.column, columnStyle]}>
-                <View
-                  style={[
-                    styles.todayBorderWrap,
-                    { borderColor: theme.grassFilled },
-                  ]}
-                >
-                  <View style={styles.todayBorderInner}>{content}</View>
-                </View>
-              </View>
-            );
-          }
-          return (
-            <View key={i} style={[styles.column, columnStyle]}>
-              {content}
+                {weekdayLabels[i]}
+              </Text>
             </View>
-          );
-        })}
+            <View style={[styles.dateCell, { width: cellWidth }]}>
+              <Text
+                style={[styles.dateText, d.isToday && styles.dateTextToday]}
+              >
+                {String(d.date)}
+              </Text>
+            </View>
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -109,41 +85,38 @@ const styles = StyleSheet.create({
   column: {
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
-  },
-  todayBorderWrap: {
-    width: "100%",
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 4,
-    alignItems: "center",
-  },
-  todayBorderInner: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingVertical: CELL_VERTICAL_PADDING,
   },
   weekdayCell: {
-    height: WEEKDAY_HEIGHT,
-    alignItems: "center",
     justifyContent: "center",
-    marginBottom: WEEKDAY_MARGIN_BOTTOM,
-  },
-  weekdayText: {
-    fontSize: 13,
-    color: theme.textSecondary,
+    height: 20,
   },
   dateCell: {
     justifyContent: "center",
+    height: 20,
+    marginTop: 4,
+  },
+  todayBg: {
+    backgroundColor: theme.grassFilled,
+    borderRadius: 16,
+  },
+  weekdayText: {
+    fontSize: 13,
+    lineHeight: 16,
+    color: theme.textSecondary,
+    textAlign: "center",
+  },
+  weekdayTextToday: {
+    color: "rgba(255,255,255,0.75)",
   },
   dateText: {
     fontSize: 14,
+    lineHeight: 17,
     color: theme.text,
     textAlign: "center",
   },
   dateTextToday: {
     fontWeight: "700",
-    color: theme.text,
+    color: "#fff",
   },
 });

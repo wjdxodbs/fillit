@@ -13,5 +13,5 @@ export const theme = {
   grassHighlight: "#e0e0e0",
   border: "#333333",
   tabActive: MAIN_COLOR,
-  tabInactive: "#757575",
+  tabInactive: "#8e8e8e",
 } as const;
