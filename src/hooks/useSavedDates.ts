@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { SavedDate } from "../types";
+import { scheduleGoalReminder, cancelGoalReminder, rescheduleAllReminders } from "../utils/notifications";
 
 const STORAGE_KEY = "saved_dates";
 
@@ -25,6 +26,7 @@ export function useSavedDates() {
         return { id, title, baseDate, targetDate };
       });
       setDates(migrated);
+      rescheduleAllReminders(migrated).catch(() => {});
     } catch {
       setDates([]);
     } finally {
@@ -44,39 +46,24 @@ export function useSavedDates() {
         baseDate,
         targetDate,
       };
-      setDates((prev) => {
-        const next = [...prev, newItem];
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
+      const next = [...dates, newItem];
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setDates(next);
+      scheduleGoalReminder(newItem).catch(() => {});
       return newItem;
     },
-    []
-  );
-
-  const update = useCallback(
-    async (id: string, title: string, baseDate: string, targetDate: string) => {
-      setDates((prev) => {
-        const next = prev.map((d) =>
-          d.id === id ? { ...d, title, baseDate, targetDate } : d
-        );
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
-    },
-    []
+    [dates]
   );
 
   const remove = useCallback(
     async (id: string) => {
-      setDates((prev) => {
-        const next = prev.filter((d) => d.id !== id);
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        return next;
-      });
+      const next = dates.filter((d) => d.id !== id);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setDates(next);
+      cancelGoalReminder(id).catch(() => {});
     },
-    []
+    [dates]
   );
 
-  return { dates, loading, add, update, remove, refresh: load };
+  return { dates, loading, add, remove, refresh: load };
 }

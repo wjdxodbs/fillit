@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   Pressable,
   StyleSheet,
@@ -10,7 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
 import type { SavedDate } from "../types";
-import { getDaysBetween, formatDate, toDateStr } from "../utils/dateUtils";
+import { getDaysBetween, getElapsedDays, formatDate, toDateStr } from "../utils/dateUtils";
 
 interface GoalListItemProps {
   item: SavedDate;
@@ -20,16 +20,14 @@ interface GoalListItemProps {
 
 export function GoalListItem({ item, onPress, onDelete }: GoalListItemProps) {
   const totalDays = getDaysBetween(item.baseDate, item.targetDate);
-  const todayStr = useMemo(() => toDateStr(new Date()), []);
-  let elapsedDays = 0;
-  if (todayStr < item.baseDate) elapsedDays = 0;
-  else if (todayStr > item.targetDate) elapsedDays = totalDays;
-  else elapsedDays = getDaysBetween(item.baseDate, todayStr);
+  const todayStr = toDateStr(new Date());
+  const isCompleted = todayStr > item.targetDate;
+  const elapsedDays = getElapsedDays(item.baseDate, item.targetDate, totalDays, todayStr);
   const progressPercent =
     totalDays > 0 ? Math.round((elapsedDays / totalDays) * 100) : 0;
 
   return (
-    <Pressable style={styles.item} onPress={onPress}>
+    <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={onPress}>
       <View style={styles.itemProgressBgWrap}>
         <LinearGradient
           colors={["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"]}
@@ -43,9 +41,14 @@ export function GoalListItem({ item, onPress, onDelete }: GoalListItemProps) {
       </View>
       <View style={styles.itemContent}>
         <View style={styles.itemHeaderRow}>
-          <Text style={styles.itemTitle} numberOfLines={1}>
+          <Text style={[styles.itemTitle, isCompleted && styles.itemTitleCompleted]} numberOfLines={1}>
             {item.title}
           </Text>
+          {isCompleted && (
+            <View style={styles.completedBadge}>
+              <Text style={styles.completedBadgeText}>완료</Text>
+            </View>
+          )}
         </View>
         <Text style={styles.itemDate}>
           {formatDate(item.baseDate)} ~{" "}
@@ -75,6 +78,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 10,
     overflow: "hidden",
+  },
+  itemCompleted: {
+    opacity: 0.6,
   },
   itemProgressBgWrap: {
     position: "absolute",
@@ -115,5 +121,20 @@ const styles = StyleSheet.create({
   deleteBtn: {
     padding: 13,
     marginLeft: 4,
+  },
+  itemTitleCompleted: {
+    color: theme.textSecondary,
+  },
+  completedBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: "rgba(0,196,154,0.15)",
+    borderRadius: 6,
+  },
+  completedBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: theme.grassFilled,
   },
 });

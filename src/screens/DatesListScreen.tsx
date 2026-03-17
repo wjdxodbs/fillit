@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -13,13 +13,14 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSavedDates } from "../hooks/useSavedDates";
 import { useGoalForm } from "../hooks/useGoalForm";
 import { SimpleCalendar } from "../components/SimpleCalendar";
 import { GoalListItem } from "../components/GoalListItem";
 import { theme } from "../theme";
-import { formatDate } from "../utils/dateUtils";
+import { formatDate, toDateStr } from "../utils/dateUtils";
 
 export function DatesListScreen({
   navigation,
@@ -33,13 +34,21 @@ export function DatesListScreen({
 }) {
   const insets = useSafeAreaInsets();
   const { dates, loading, add, remove } = useSavedDates();
-  const sortedDates = useMemo(
-    () =>
-      [...dates].sort((a, b) =>
-        a.targetDate < b.targetDate ? -1 : a.targetDate > b.targetDate ? 1 : 0
-      ),
-    [dates]
+  const [todayStr, setTodayStr] = useState(() => toDateStr(new Date()));
+  useFocusEffect(
+    useCallback(() => {
+      setTodayStr(toDateStr(new Date()));
+    }, [])
   );
+  const sortedDates = useMemo(() => {
+    const isCompleted = (d: { targetDate: string }) => d.targetDate < todayStr;
+    return [...dates].sort((a, b) => {
+      const ac = isCompleted(a) ? 1 : 0;
+      const bc = isCompleted(b) ? 1 : 0;
+      if (ac !== bc) return ac - bc;
+      return a.targetDate < b.targetDate ? -1 : a.targetDate > b.targetDate ? 1 : 0;
+    });
+  }, [dates, todayStr]);
   const {
     modalVisible,
     title,
@@ -57,6 +66,7 @@ export function DatesListScreen({
     openAdd,
     closeModal,
     save,
+    canSave,
     goPrevMonth,
     goNextMonth,
     openBasePicker,
@@ -210,8 +220,9 @@ export function DatesListScreen({
                 <Text style={styles.cancelBtnText}>취소</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.saveBtn]}
+                style={[styles.modalBtn, styles.saveBtn, !canSave && styles.saveBtnDisabled]}
                 onPress={save}
+                disabled={!canSave}
               >
                 <Text style={styles.saveBtnText}>저장</Text>
               </TouchableOpacity>
@@ -361,6 +372,9 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     backgroundColor: theme.grassFilled,
+  },
+  saveBtnDisabled: {
+    opacity: 0.4,
   },
   saveBtnText: {
     color: "#fff",
