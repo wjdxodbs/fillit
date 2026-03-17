@@ -1,5 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { RangeGrassGrid } from "../components/RangeGrassGrid";
 import { theme } from "../theme";
 import { getDaysBetween, formatDate, toDateStr } from "../utils/dateUtils";
@@ -14,7 +15,12 @@ export function DateDetailScreen({ route }: DateDetailScreenProps) {
     () => getDaysBetween(baseDate, targetDate),
     [baseDate, targetDate]
   );
-  const todayStr = toDateStr(new Date());
+  const [todayStr, setTodayStr] = useState(() => toDateStr(new Date()));
+  useFocusEffect(
+    useCallback(() => {
+      setTodayStr(toDateStr(new Date()));
+    }, [])
+  );
   const elapsedDays = useMemo(() => {
     if (todayStr < baseDate) return 0;
     if (todayStr > targetDate) return totalBlocks;
