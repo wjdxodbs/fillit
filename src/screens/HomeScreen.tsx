@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { WeekDateStrip } from "../components/WeekDateStrip";
 import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
+import { StatsCard } from "../components/StatsCard";
 import { theme } from "../theme";
-import { isLeapYear } from "../utils/dateUtils";
+import { isLeapYear, getDayOfYear } from "../utils/dateUtils";
 
 function getProgressPercent(year: number, endDate: Date): number {
   const daysInYear = isLeapYear(year) ? 366 : 365;
@@ -20,12 +21,15 @@ export function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       setToday(new Date());
-    }, [])
+    }, []),
   );
   const year = today.getFullYear();
   const month = today.getMonth();
   const date = today.getDate();
   const progress = getProgressPercent(year, today);
+  const daysInYear = isLeapYear(year) ? 366 : 365;
+  const elapsed = getDayOfYear(today);
+  const remaining = daysInYear - elapsed;
 
   return (
     <ScrollView
@@ -33,17 +37,13 @@ export function HomeScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View>
-        <View style={styles.headerRow}>
-          <YearMonthHeader year={year} month={month} />
-        </View>
+      <View style={styles.headerRow}>
+        <YearMonthHeader year={year} month={month} />
       </View>
       <View style={styles.dateStripWrap}>
         <WeekDateStrip year={year} month={month} todayDate={date} />
       </View>
-      <View>
-        <Text style={styles.progress}>{progress}% 완료</Text>
-      </View>
+      <StatsCard progress={progress} elapsed={elapsed} remaining={remaining} />
       <View style={styles.gridWrap}>
         <YearGrassGrid year={year} endDate={today} />
       </View>
@@ -63,15 +63,10 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 20,
   },
   dateStripWrap: {
     width: "100%",
-  },
-  progress: {
-    fontSize: 16,
-    color: theme.textSecondary,
-    marginBottom: 16,
   },
   gridWrap: {
     width: "100%",

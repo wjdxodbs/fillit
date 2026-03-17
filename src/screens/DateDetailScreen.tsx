@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { RangeGrassGrid } from "../components/RangeGrassGrid";
+import { StatsCard } from "../components/StatsCard";
 import { theme } from "../theme";
 import { getDaysBetween, formatDate, toDateStr } from "../utils/dateUtils";
 
@@ -28,6 +29,7 @@ export function DateDetailScreen({ route }: DateDetailScreenProps) {
   }, [baseDate, targetDate, todayStr, totalBlocks]);
   const progress =
     totalBlocks > 0 ? Math.round((elapsedDays / totalBlocks) * 100) : 0;
+  const remainingDays = totalBlocks - elapsedDays;
 
   return (
     <ScrollView
@@ -35,14 +37,12 @@ export function DateDetailScreen({ route }: DateDetailScreenProps) {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.topSection}>
-        <Text style={styles.date}>
-          {formatDate(baseDate)} ~ {formatDate(targetDate)}
-        </Text>
-        <View style={styles.progressWrap}>
-          <Text style={styles.progress}>{progress}% 완료</Text>
-        </View>
-      </View>
+      <StatsCard
+        progress={progress}
+        elapsed={elapsedDays}
+        remaining={remainingDays}
+        subtitle={`${formatDate(baseDate)} ~ ${formatDate(targetDate)}`}
+      />
       <View style={styles.gridWrap}>
         <RangeGrassGrid totalDays={totalBlocks} elapsedDays={elapsedDays} />
       </View>
@@ -57,22 +57,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 40,
-  },
-  topSection: {
-    marginBottom: 0,
-  },
-  date: {
-    fontSize: 16,
-    color: theme.textSecondary,
-    marginBottom: 8,
-  },
-  progressWrap: {
-    marginBottom: 16,
-  },
-  progress: {
-    fontSize: 16,
-    color: theme.text,
+    paddingTop: 24,
   },
   gridWrap: {
     width: "100%",
