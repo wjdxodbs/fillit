@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSavedDates } from "../hooks/useSavedDates";
 import { theme } from "../theme";
 import type { SavedDate } from "../types";
+import { getDaysBetween, formatDate, toDateStr } from "../utils/dateUtils";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const CALENDAR_WEEKS = 6;
@@ -34,21 +35,6 @@ const CALENDAR_TOTAL_HEIGHT =
   CALENDAR_ROW_GAP +
   CALENDAR_GRID_HEIGHT;
 
-function formatDisplayDate(dateStr: string): string {
-  const d = new Date(dateStr + "T12:00:00");
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return `${y}년 ${m}월 ${day}일`;
-}
-
-function getDaysBetween(baseStr: string, targetStr: string): number {
-  const a = new Date(baseStr + "T12:00:00");
-  const b = new Date(targetStr + "T12:00:00");
-  a.setHours(0, 0, 0, 0);
-  b.setHours(0, 0, 0, 0);
-  return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-}
 
 function SimpleCalendar({
   year,
@@ -277,13 +263,7 @@ function ListItem({
   onDelete: () => void;
 }) {
   const totalDays = getDaysBetween(item.baseDate, item.targetDate);
-  const todayStr = useMemo(() => {
-    const t = new Date();
-    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}-${String(t.getDate()).padStart(2, "0")}`;
-  }, []);
+  const todayStr = useMemo(() => toDateStr(new Date()), []);
   const base = new Date(item.baseDate + "T12:00:00");
   const target = new Date(item.targetDate + "T12:00:00");
   const today = new Date(todayStr + "T12:00:00");
@@ -320,8 +300,8 @@ function ListItem({
           </Text>
         </View>
         <Text style={styles.itemDate}>
-          {formatDisplayDate(item.baseDate)} ~{" "}
-          {formatDisplayDate(item.targetDate)}
+          {formatDate(item.baseDate)} ~{" "}
+          {formatDate(item.targetDate)}
         </Text>
       </View>
       <TouchableOpacity
@@ -389,10 +369,7 @@ export function DatesListScreen({
       viewMonth < oneYearLater.getMonth());
 
   const openAdd = () => {
-    const todayStr = `${currentYear}-${String(today.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayStr = toDateStr(today);
     setTitle("");
     setBaseDate(todayStr);
     setTargetDate("");
@@ -510,12 +487,7 @@ export function DatesListScreen({
                 ]}
                 onPress={() => {
                   Keyboard.dismiss();
-                  const dateStr =
-                    baseDate ||
-                    `${currentYear}-${String(today.getMonth() + 1).padStart(
-                      2,
-                      "0"
-                    )}-${String(today.getDate()).padStart(2, "0")}`;
+                  const dateStr = baseDate || toDateStr(today);
                   if (baseDate) {
                     const [y, m] = dateStr.split("-").map(Number);
                     setViewYear(y);
@@ -530,7 +502,7 @@ export function DatesListScreen({
                     !baseDate && styles.dateButtonPlaceholder,
                   ]}
                 >
-                  {baseDate ? formatDisplayDate(baseDate) : "기준 날짜"}
+                  {baseDate ? formatDate(baseDate) : "기준 날짜"}
                 </Text>
               </Pressable>
               <View style={styles.dateArrowWrap}>
@@ -566,7 +538,7 @@ export function DatesListScreen({
                     !targetDate && styles.dateButtonPlaceholder,
                   ]}
                 >
-                  {targetDate ? formatDisplayDate(targetDate) : "목표 날짜"}
+                  {targetDate ? formatDate(targetDate) : "목표 날짜"}
                 </Text>
               </Pressable>
             </View>
