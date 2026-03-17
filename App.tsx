@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
 import { Platform, View, TouchableOpacity } from "react-native";
+import { setupNotificationChannel, requestNotificationPermission } from "./src/utils/notifications";
 import { DatesStackScreen } from "./src/navigation/DatesStackScreen";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
+import type { LinkingOptions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { requestWidgetUpdate } from "react-native-android-widget";
@@ -28,7 +30,29 @@ const AppTheme = {
 
 const Tab = createBottomTabNavigator();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const linking: LinkingOptions<any> = {
+  prefixes: ["fillit://"],
+  config: {
+    screens: {
+      Home: "Home",
+      Dates: {
+        screens: {
+          DatesList: "DatesList",
+          DateDetail: "DateDetail",
+        },
+      },
+    },
+  },
+};
+
 export default function App() {
+  // 알림 채널 설정 및 권한 요청
+  useEffect(() => {
+    setupNotificationChannel();
+    requestNotificationPermission().catch(() => {});
+  }, []);
+
   // 앱이 열릴 때마다 위젯 갱신 (자정 알람 실패 대비)
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -54,7 +78,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={AppTheme}>
+      <NavigationContainer theme={AppTheme} linking={linking}>
         <StatusBar style="light" />
         <View style={{ flex: 1, backgroundColor: theme.background }}>
           <Tab.Navigator

@@ -58,6 +58,7 @@ export function FillitGrassWidget({
 
   return (
     <FlexWidget
+      clickAction="WIDGET_CLICK"
       style={{
         flexDirection: "column",
         padding: 12,

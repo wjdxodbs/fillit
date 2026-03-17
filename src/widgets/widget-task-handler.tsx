@@ -1,3 +1,4 @@
+import { Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { WidgetTaskHandlerProps } from "react-native-android-widget";
 import { FillitGrassWidget } from "./FillitGrassWidget";
@@ -6,6 +7,7 @@ import { widgetConfigKey } from "./widget-config";
 import {
   isLeapYear,
   getDaysBetween,
+  getElapsedDays,
   getDayOfYear,
   toDateStr,
 } from "../utils/dateUtils";
@@ -28,20 +30,19 @@ export function getSavedDateWidgetData(
   baseDate: string,
   targetDate: string
 ) {
-  const now = new Date();
-  const base = new Date(baseDate + "T12:00:00");
-  const target = new Date(targetDate + "T12:00:00");
-  base.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  const nowTime = now.getTime();
   const totalDays = getDaysBetween(baseDate, targetDate);
-  let filledUpTo: number;
-  if (nowTime < base.getTime()) filledUpTo = 0;
-  else if (nowTime > target.getTime()) filledUpTo = totalDays;
-  else {
-    filledUpTo = getDaysBetween(baseDate, toDateStr(now));
-  }
+  const filledUpTo = getElapsedDays(baseDate, targetDate, totalDays, toDateStr(new Date()));
   return { title, baseDate, targetDate, filledUpTo, totalDays };
+}
+
+async function readWidgetConfig(widgetId: number): Promise<WidgetConfig | null> {
+  const raw = await AsyncStorage.getItem(widgetConfigKey(widgetId));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as WidgetConfig;
+  } catch {
+    return null;
+  }
 }
 
 export async function getWidgetDataForConfig(widgetId: number): Promise<{
@@ -51,20 +52,9 @@ export async function getWidgetDataForConfig(widgetId: number): Promise<{
   filledUpTo: number;
   totalDays: number;
 }> {
-  const raw = await AsyncStorage.getItem(widgetConfigKey(widgetId));
-  if (!raw) return getYearWidgetData();
-  let config: WidgetConfig;
-  try {
-    config = JSON.parse(raw) as WidgetConfig;
-  } catch {
-    return getYearWidgetData();
-  }
-  if (config.mode === "year") return getYearWidgetData();
-  return getSavedDateWidgetData(
-    config.title,
-    config.baseDate,
-    config.targetDate
-  );
+  const config = await readWidgetConfig(widgetId);
+  if (!config || config.mode === "year") return getYearWidgetData();
+  return getSavedDateWidgetData(config.title, config.baseDate, config.targetDate);
 }
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
@@ -90,6 +80,16 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case "WIDGET_RESIZED":
       renderWidget(widget);
       break;
+    case "WIDGET_CLICK": {
+      const config = await readWidgetConfig(widgetInfo.widgetId);
+      if (config?.mode === "date") {
+        const url = `fillit://DateDetail?title=${encodeURIComponent(config.title)}&baseDate=${config.baseDate}&targetDate=${config.targetDate}`;
+        Linking.openURL(url);
+      } else {
+        Linking.openURL("fillit://Home");
+      }
+      break;
+    }
     default:
       break;
   }
