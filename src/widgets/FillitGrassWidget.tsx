@@ -22,8 +22,9 @@ export interface FillitGrassWidgetProps {
   totalDays: number;
 }
 
+
 /**
- * 위젯: 제목 → 시작일~목표일 → 잔디 그리드
+ * 위젯: 제목 → 통계 카드(날짜 범위·완료%·경과·남은 일수·프로그레스바) → 잔디 그리드
  */
 export function FillitGrassWidget({
   title,
@@ -33,9 +34,11 @@ export function FillitGrassWidget({
   totalDays,
 }: FillitGrassWidgetProps) {
   const ROWS = Math.ceil(totalDays / COLS);
-  /** 정확히 totalDays개만 그림. 행을 꽉 채우기 위해 남는 칸 없음 */
   const width = COLS * CELL_SIZE + (COLS - 1) * GAP;
   const height = ROWS * CELL_SIZE + (ROWS - 1) * GAP;
+  const progress =
+    totalDays > 0 ? Math.round((filledUpTo / totalDays) * 100) : 0;
+  const remaining = totalDays - filledUpTo;
 
   const rects = Array.from({ length: totalDays }, (_, i) => {
     const dayIndex = i + 1;
@@ -48,46 +51,131 @@ export function FillitGrassWidget({
     return `<rect x="${x}" y="${y}" width="${CELL_SIZE}" height="${CELL_SIZE}" rx="2" fill="${fill}"/>`;
   });
 
-  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" preserveAspectRatio="none">${rects.join(
-    ""
-  )}</svg>`;
-
-  const dateRangeText = `${formatDate(baseDate)} ~ ${formatDate(targetDate)}`;
-  const progress =
-    totalDays > 0 ? Math.round((filledUpTo / totalDays) * 100) : 0;
-  const progressText = `${progress}% 완료`;
+  const svgString =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="100%" height="100%" preserveAspectRatio="none">` +
+    rects.join("") +
+    `</svg>`;
 
   return (
     <FlexWidget
       style={{
         flexDirection: "column",
         padding: 12,
-        paddingTop: 20,
+        paddingTop: 16,
         backgroundColor: theme.background,
         width: "match_parent",
         height: "match_parent",
       }}
     >
+      {/* 제목 */}
       <TextWidget
         text={title}
-        style={{ color: theme.text, fontSize: 24, fontWeight: "600" }}
+        style={{ color: theme.text, fontSize: 26, fontWeight: "700" }}
       />
-      <TextWidget
-        text={dateRangeText}
+
+      {/* 통계 카드 */}
+      <FlexWidget
         style={{
-          color: theme.textSecondary,
-          fontSize: 17,
-          marginTop: 4,
+          flexDirection: "column",
+          backgroundColor: theme.surface,
+          borderRadius: 12,
+          padding: 10,
+          marginTop: 8,
+          width: "match_parent",
         }}
-      />
-      <TextWidget
-        text={progressText}
-        style={{
-          color: theme.textSecondary,
-          fontSize: 16,
-          marginTop: 2,
-        }}
-      />
+      >
+        {/* 날짜 범위 */}
+        <TextWidget
+          text={`${formatDate(baseDate)} ~ ${formatDate(targetDate)}`}
+          style={{
+            color: theme.textSecondary,
+            fontSize: 14,
+            marginBottom: 8,
+          }}
+        />
+
+        {/* 통계 행: 완료% / 경과 일수 / 남은 일수 */}
+        <FlexWidget
+          style={{
+            flexDirection: "row",
+            width: "match_parent",
+            marginBottom: 8,
+          }}
+        >
+          <FlexWidget
+            style={{ flex: 1, flexDirection: "column", alignItems: "center" }}
+          >
+            <TextWidget
+              text={`${progress}%`}
+              style={{ color: GRASS_FILLED, fontSize: 18, fontWeight: "700" }}
+            />
+            <TextWidget
+              text="완료"
+              style={{ color: theme.textSecondary, fontSize: 13 }}
+            />
+          </FlexWidget>
+
+          <FlexWidget
+            style={{ width: 1, height: 28, backgroundColor: theme.border }}
+          />
+
+          <FlexWidget
+            style={{ flex: 1, flexDirection: "column", alignItems: "center" }}
+          >
+            <TextWidget
+              text={String(filledUpTo)}
+              style={{ color: GRASS_FILLED, fontSize: 18, fontWeight: "700" }}
+            />
+            <TextWidget
+              text="경과 일수"
+              style={{ color: theme.textSecondary, fontSize: 13 }}
+            />
+          </FlexWidget>
+
+          <FlexWidget
+            style={{ width: 1, height: 28, backgroundColor: theme.border }}
+          />
+
+          <FlexWidget
+            style={{ flex: 1, flexDirection: "column", alignItems: "center" }}
+          >
+            <TextWidget
+              text={String(remaining)}
+              style={{ color: GRASS_FILLED, fontSize: 18, fontWeight: "700" }}
+            />
+            <TextWidget
+              text="남은 일수"
+              style={{ color: theme.textSecondary, fontSize: 13 }}
+            />
+          </FlexWidget>
+        </FlexWidget>
+
+        {/* 프로그레스 바 */}
+        <FlexWidget
+          style={{
+            flexDirection: "row",
+            width: "match_parent",
+            height: 6,
+          }}
+        >
+          <FlexWidget
+            style={{
+              flex: progress,
+              height: "match_parent",
+              backgroundColor: GRASS_FILLED,
+            }}
+          />
+          <FlexWidget
+            style={{
+              flex: Math.max(1, 100 - progress),
+              height: "match_parent",
+              backgroundColor: GRASS_EMPTY,
+            }}
+          />
+        </FlexWidget>
+      </FlexWidget>
+
+      {/* 잔디 그리드 */}
       <SvgWidget
         svg={svgString}
         style={{
