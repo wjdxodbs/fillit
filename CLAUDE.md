@@ -41,6 +41,7 @@ No test runner is configured in this project.
 ### Screen Flow
 - **Home tab** → [HomeScreen.tsx](src/screens/HomeScreen.tsx) — current year grass grid progress
 - **Goals tab** → [DatesListScreen.tsx](src/screens/DatesListScreen.tsx) — CRUD for goal date ranges → [DateDetailScreen.tsx](src/screens/DateDetailScreen.tsx) — grass grid for a specific goal range
+- Stack navigator for the Goals tab lives in [DatesStackScreen.tsx](src/navigation/DatesStackScreen.tsx)
 
 ### State Management
 No Redux or Context. Goals are managed via the custom hook [useSavedDates.ts](src/hooks/useSavedDates.ts), which reads/writes an array of `SavedDate` objects to AsyncStorage under the key `saved_dates`.
@@ -54,13 +55,23 @@ interface SavedDate {
 }
 ```
 
+Modal form state and logic for adding goals is extracted into [useGoalForm.ts](src/hooks/useGoalForm.ts) (used by DatesListScreen).
+
+### Shared UI Components
+- [StatsCard.tsx](src/components/StatsCard.tsx) — stats row (완료% / 경과 일수 / 남은 일수) + progress bar; used by both HomeScreen and DateDetailScreen
+- [GoalListItem.tsx](src/components/GoalListItem.tsx) — list row with gradient progress background; used by DatesListScreen
+- [SimpleCalendar.tsx](src/components/SimpleCalendar.tsx) — inline month calendar for date picking; used by DatesListScreen modal
+- [WeekDateStrip.tsx](src/components/WeekDateStrip.tsx) — horizontal week strip showing today's context; used by HomeScreen
+- [YearMonthHeader.tsx](src/components/YearMonthHeader.tsx) — year/month label header; used by HomeScreen
+
 ### Grass Grid Components
 - [YearGrassGrid.tsx](src/components/YearGrassGrid.tsx) — 16-column grid for the current year (Jan 1 → Dec 31)
 - [RangeGrassGrid.tsx](src/components/RangeGrassGrid.tsx) — grid for a custom date range
 - [DayCell.tsx](src/components/DayCell.tsx) — individual cell with states: empty, filled, today, highlight
+- [gridConstants.ts](src/components/gridConstants.ts) — shared cell size / gap constants used by both grid components
 
 ### Android Widget System
-- [FillitGrassWidget.tsx](src/widgets/FillitGrassWidget.tsx) — widget UI using `react-native-android-widget` primitives (`FlexWidget`, `TextWidget`, `SvgWidget`)
+- [FillitGrassWidget.tsx](src/widgets/FillitGrassWidget.tsx) — widget UI using `react-native-android-widget` primitives (`FlexWidget`, `TextWidget`, `SvgWidget`); layout mirrors DateDetailScreen (title → stats card → grass grid)
 - [widget-task-handler.tsx](src/widgets/widget-task-handler.tsx) — loads config per widget ID from AsyncStorage and renders the appropriate widget data
 - [widget-config.ts](src/widgets/widget-config.ts) — `WidgetConfig` type and `widgetConfigKey(widgetId)` storage key helper
 - [WidgetConfigurationScreen.tsx](src/widgets/WidgetConfigurationScreen.tsx) — settings UI shown when user adds/configures the widget
