@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
+import { type Theme } from "../theme";
 import { CELL_GAP, GRID_HORIZONTAL_PADDING, WEEKDAYS } from "./gridConstants";
+
 const COLUMNS = 7;
 const CELL_VERTICAL_PADDING = 8;
 
@@ -17,8 +19,59 @@ interface WeekDateStripProps {
   todayDate: number;
 }
 
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: 20,
+      width: "100%",
+    },
+    columnsRow: {
+      flexDirection: "row",
+    },
+    column: {
+      flexDirection: "column",
+      alignItems: "center",
+      paddingVertical: CELL_VERTICAL_PADDING,
+    },
+    weekdayCell: {
+      justifyContent: "center",
+      height: 20,
+    },
+    dateCell: {
+      justifyContent: "center",
+      height: 20,
+      marginTop: 4,
+    },
+    todayBg: {
+      backgroundColor: theme.grassFilled,
+      borderRadius: 16,
+    },
+    weekdayText: {
+      fontSize: 13,
+      lineHeight: 16,
+      color: theme.textSecondary,
+      textAlign: "center",
+    },
+    weekdayTextToday: {
+      color: "rgba(255,255,255,0.75)",
+    },
+    dateText: {
+      fontSize: 14,
+      lineHeight: 17,
+      color: theme.text,
+      textAlign: "center",
+    },
+    dateTextToday: {
+      fontWeight: "700",
+      color: "#fff",
+    },
+  });
+
 export function WeekDateStrip({ year, month, todayDate }: WeekDateStripProps) {
   const { width: screenWidth } = useWindowDimensions();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const cellWidth = useMemo(() => {
     const available = screenWidth - GRID_HORIZONTAL_PADDING;
     const totalGap = (COLUMNS - 1) * CELL_GAP;
@@ -71,50 +124,3 @@ export function WeekDateStrip({ year, month, todayDate }: WeekDateStripProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 20,
-    width: "100%",
-  },
-  columnsRow: {
-    flexDirection: "row",
-  },
-  column: {
-    flexDirection: "column",
-    alignItems: "center",
-    paddingVertical: CELL_VERTICAL_PADDING,
-  },
-  weekdayCell: {
-    justifyContent: "center",
-    height: 20,
-  },
-  dateCell: {
-    justifyContent: "center",
-    height: 20,
-    marginTop: 4,
-  },
-  todayBg: {
-    backgroundColor: theme.grassFilled,
-    borderRadius: 16,
-  },
-  weekdayText: {
-    fontSize: 13,
-    lineHeight: 16,
-    color: theme.textSecondary,
-    textAlign: "center",
-  },
-  weekdayTextToday: {
-    color: "rgba(255,255,255,0.75)",
-  },
-  dateText: {
-    fontSize: 14,
-    lineHeight: 17,
-    color: theme.text,
-    textAlign: "center",
-  },
-  dateTextToday: {
-    fontWeight: "700",
-    color: "#fff",
-  },
-});

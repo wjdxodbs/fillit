@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo } from "react";
 import {
   Animated,
   Modal,
@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
+import { type Theme } from "../theme";
 import type { SavedDate } from "../types";
 import { getDaysBetween, getElapsedDays, formatDate, calcProgress } from "../utils/dateUtils";
+import { useBottomSheet } from "../hooks/useBottomSheet";
 
 const PROGRESS_GRADIENT_COLORS = ["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"] as const;
 const COMPLETED_BADGE_BG = "rgba(0,196,154,0.15)";
@@ -20,47 +22,151 @@ const COMPLETED_BADGE_BG = "rgba(0,196,154,0.15)";
 interface GoalListItemProps {
   item: SavedDate;
   todayStr: string;
-  onPress: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onPress: (item: SavedDate) => void;
+  onEdit: (item: SavedDate) => void;
+  onDelete: (item: SavedDate) => void;
 }
 
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    item: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      marginBottom: 10,
+      overflow: "hidden",
+    },
+    itemCompleted: {
+      opacity: 0.6,
+    },
+    itemProgressBgWrap: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+    },
+    itemProgressBg: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      overflow: "hidden",
+      borderTopRightRadius: 12,
+      borderBottomRightRadius: 12,
+    },
+    itemContent: {
+      flex: 1,
+      minWidth: 0,
+      zIndex: 1,
+    },
+    itemHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 2,
+    },
+    itemTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.text,
+    },
+    itemDate: {
+      fontSize: 13,
+      color: theme.textSecondary,
+    },
+    moreBtn: {
+      padding: 8,
+      marginLeft: 4,
+      zIndex: 1,
+    },
+    itemTitleCompleted: {
+      color: theme.textSecondary,
+    },
+    completedBadge: {
+      marginLeft: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      backgroundColor: COMPLETED_BADGE_BG,
+      borderRadius: 6,
+    },
+    completedBadgeText: {
+      fontSize: 11,
+      fontWeight: "600",
+      color: theme.grassFilled,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    sheet: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: theme.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 32,
+      paddingTop: 12,
+    },
+    sheetHandle: {
+      width: 36,
+      height: 4,
+      backgroundColor: theme.border,
+      borderRadius: 2,
+      alignSelf: "center",
+      marginBottom: 16,
+    },
+    sheetTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.text,
+      marginBottom: 16,
+    },
+    sheetAction: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 14,
+    },
+    sheetDivider: {
+      height: 1,
+      backgroundColor: theme.border,
+    },
+    sheetActionEdit: {
+      fontSize: 16,
+      color: theme.text,
+      fontWeight: "500",
+    },
+    sheetActionDelete: {
+      fontSize: 16,
+      color: theme.danger,
+      fontWeight: "500",
+    },
+  });
+
 export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, onPress, onEdit, onDelete }: GoalListItemProps) {
-  const [menuVisible, setMenuVisible] = useState(false);
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const sheetTranslateY = useRef(new Animated.Value(300)).current;
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { visible: menuVisible, setVisible: setMenuVisible, close: closeSheet, backdropOpacity, sheetTranslateY } = useBottomSheet();
 
-  useEffect(() => {
-    if (menuVisible) {
-      Animated.parallel([
-        Animated.timing(backdropOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(sheetTranslateY, { toValue: 0, duration: 280, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [menuVisible]);
+  const totalDays = getDaysBetween(item.baseDate, item.targetDate);
+  const elapsedDays = getElapsedDays(item.baseDate, item.targetDate, totalDays, todayStr);
+  const isCompleted = todayStr > item.targetDate;
+  const progressPercent = calcProgress(elapsedDays, totalDays);
 
-  const closeSheet = useCallback((callback?: () => void) => {
-    Animated.parallel([
-      Animated.timing(backdropOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
-      Animated.timing(sheetTranslateY, { toValue: 300, duration: 220, useNativeDriver: true }),
-    ]).start(() => {
-      setMenuVisible(false);
-      callback?.();
-    });
-  }, [backdropOpacity, sheetTranslateY]);
-
-  const { isCompleted, progressPercent } = useMemo(() => {
-    const totalDays = getDaysBetween(item.baseDate, item.targetDate);
-    const elapsedDays = getElapsedDays(item.baseDate, item.targetDate, totalDays, todayStr);
-    return {
-      isCompleted: todayStr > item.targetDate,
-      progressPercent: calcProgress(elapsedDays, totalDays),
-    };
-  }, [item.baseDate, item.targetDate, todayStr]);
+  const handlePress = () => onPress(item);
+  const handleEdit = () => onEdit(item);
+  const handleDelete = () => onDelete(item);
 
   return (
     <>
-      <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={onPress}>
+      <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={handlePress}>
         <View style={styles.itemProgressBgWrap}>
           <LinearGradient
             colors={PROGRESS_GRADIENT_COLORS}
@@ -115,14 +221,14 @@ export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, o
           <Text style={styles.sheetTitle} numberOfLines={1}>{item.title}</Text>
           <TouchableOpacity
             style={styles.sheetAction}
-            onPress={() => closeSheet(onEdit)}
+            onPress={() => closeSheet(handleEdit)}
           >
             <Text style={styles.sheetActionEdit}>수정</Text>
           </TouchableOpacity>
           <View style={styles.sheetDivider} />
           <TouchableOpacity
             style={styles.sheetAction}
-            onPress={() => closeSheet(onDelete)}
+            onPress={() => closeSheet(handleDelete)}
           >
             <Text style={styles.sheetActionDelete}>삭제</Text>
           </TouchableOpacity>
@@ -130,126 +236,4 @@ export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, o
       </Modal>
     </>
   );
-});
-
-const styles = StyleSheet.create({
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    marginBottom: 10,
-    overflow: "hidden",
-  },
-  itemCompleted: {
-    opacity: 0.6,
-  },
-  itemProgressBgWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
-  itemProgressBg: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    overflow: "hidden",
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-  },
-  itemContent: {
-    flex: 1,
-    minWidth: 0,
-    zIndex: 1,
-  },
-  itemHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 2,
-  },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.text,
-  },
-  itemDate: {
-    fontSize: 13,
-    color: theme.textSecondary,
-  },
-  moreBtn: {
-    padding: 8,
-    marginLeft: 4,
-    zIndex: 1,
-  },
-  itemTitleCompleted: {
-    color: theme.textSecondary,
-  },
-  completedBadge: {
-    marginLeft: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    backgroundColor: COMPLETED_BADGE_BG,
-    borderRadius: 6,
-  },
-  completedBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.grassFilled,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-    paddingTop: 12,
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    backgroundColor: theme.border,
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: theme.text,
-    marginBottom: 16,
-  },
-  sheetAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-  },
-  sheetDivider: {
-    height: 1,
-    backgroundColor: theme.border,
-  },
-  sheetActionEdit: {
-    fontSize: 16,
-    color: theme.text,
-    fontWeight: "500",
-  },
-  sheetActionDelete: {
-    fontSize: 16,
-    color: theme.danger,
-    fontWeight: "500",
-  },
 });

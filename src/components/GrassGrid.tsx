@@ -10,20 +10,19 @@ interface GrassGridProps {
 }
 
 export const GrassGrid = React.memo(function GrassGrid({ rows, cellSize }: GrassGridProps) {
+  const cellSizeStyle = { width: cellSize, height: cellSize };
+
   return (
     <View>
       {rows.map((row, rowIndex) => (
-        <View key={rowIndex} style={[styles.row, { marginBottom: CELL_GAP }]}>
+        <View key={rowIndex} style={styles.row}>
           {row.map((state, colIndex) => (
             <View
               key={colIndex}
               style={[
                 styles.cellWrapper,
-                {
-                  width: cellSize,
-                  height: cellSize,
-                  marginRight: colIndex < row.length - 1 ? CELL_GAP : 0,
-                },
+                cellSizeStyle,
+                colIndex < row.length - 1 && styles.cellGap,
               ]}
             >
               <DayCell state={state} size={cellSize} />
@@ -38,9 +37,13 @@ export const GrassGrid = React.memo(function GrassGrid({ rows, cellSize }: Grass
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
+    marginBottom: CELL_GAP,
   },
   cellWrapper: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  cellGap: {
+    marginRight: CELL_GAP,
   },
 });

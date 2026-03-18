@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
+import { type Theme } from "../theme";
 import { WEEKDAYS } from "./gridConstants";
+
 const CALENDAR_WEEKS = 6;
 const CALENDAR_ROW_HEIGHT = 36;
 const CALENDAR_ROW_GAP = 4;
@@ -32,7 +34,73 @@ interface SimpleCalendarProps {
   canGoNext: boolean;
 }
 
-export function SimpleCalendar({
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    wrap: {
+      marginBottom: 12,
+      height: CALENDAR_TOTAL_HEIGHT,
+      minWidth: CALENDAR_MIN_WIDTH,
+    },
+    gridBody: {
+      height: CALENDAR_GRID_HEIGHT,
+      overflow: "visible",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      height: CALENDAR_HEADER_HEIGHT,
+      marginBottom: 12,
+    },
+    navBtn: { padding: 13 },
+    navText: { fontSize: 22, color: theme.text, fontWeight: "600" },
+    navDisabled: { color: theme.textSecondary, opacity: 0.5 },
+    monthTitle: { fontSize: 16, fontWeight: "600", color: theme.text },
+    weekRow: {
+      flexDirection: "row",
+      height: CALENDAR_ROW_HEIGHT,
+      marginBottom: CALENDAR_ROW_GAP,
+      overflow: "visible",
+    },
+    weekdayRow: {
+      flexDirection: "row",
+      height: CALENDAR_WEEKDAY_ROW_HEIGHT,
+      marginBottom: CALENDAR_ROW_GAP,
+    },
+    weekdayCell: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    weekdayText: { fontSize: 12, color: theme.textSecondary, fontWeight: "600" },
+    dayCell: {
+      flex: 1,
+      minWidth: MIN_DAY_CELL_WIDTH,
+      height: CALENDAR_ROW_HEIGHT,
+      maxHeight: CALENDAR_ROW_HEIGHT,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dayCellInner: {
+      width: MIN_DAY_CELL_WIDTH,
+      height: MIN_DAY_CELL_WIDTH,
+      borderRadius: MIN_DAY_CELL_WIDTH / 2,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dayCellInnerSelected: {
+      backgroundColor: theme.grassFilled,
+    },
+    dayText: {
+      fontSize: 13,
+      color: theme.text,
+      textAlign: "center",
+    },
+    dayTextDisabled: { color: theme.textSecondary, opacity: 0.4 },
+    dayTextSelected: { color: theme.background, fontWeight: "600" },
+  });
+
+export const SimpleCalendar = React.memo(function SimpleCalendar({
   year,
   month,
   minimumDate,
@@ -44,6 +112,9 @@ export function SimpleCalendar({
   canGoPrev,
   canGoNext,
 }: SimpleCalendarProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const weeks = useMemo(() => {
     const first = new Date(year, month, 1);
     const last = new Date(year, month + 1, 0);
@@ -78,8 +149,7 @@ export function SimpleCalendar({
     return true;
   };
 
-  const isSelected = (day: number | null) =>
-    day !== null && selectedDate === dateStr(day);
+  const isSelected = (day: number | null) => day !== null && selectedDate === dateStr(day);
 
   return (
     <View style={styles.wrap}>
@@ -156,69 +226,4 @@ export function SimpleCalendar({
       </View>
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: 12,
-    height: CALENDAR_TOTAL_HEIGHT,
-    minWidth: CALENDAR_MIN_WIDTH,
-  },
-  gridBody: {
-    height: CALENDAR_GRID_HEIGHT,
-    overflow: "visible",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    height: CALENDAR_HEADER_HEIGHT,
-    marginBottom: 12,
-  },
-  navBtn: { padding: 13 },
-  navText: { fontSize: 22, color: theme.text, fontWeight: "600" },
-  navDisabled: { color: theme.textSecondary, opacity: 0.5 },
-  monthTitle: { fontSize: 16, fontWeight: "600", color: theme.text },
-  weekRow: {
-    flexDirection: "row",
-    height: CALENDAR_ROW_HEIGHT,
-    marginBottom: CALENDAR_ROW_GAP,
-    overflow: "visible",
-  },
-  weekdayRow: {
-    flexDirection: "row",
-    height: CALENDAR_WEEKDAY_ROW_HEIGHT,
-    marginBottom: CALENDAR_ROW_GAP,
-  },
-  weekdayCell: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  weekdayText: { fontSize: 12, color: theme.textSecondary, fontWeight: "600" },
-  dayCell: {
-    flex: 1,
-    minWidth: MIN_DAY_CELL_WIDTH,
-    height: CALENDAR_ROW_HEIGHT,
-    maxHeight: CALENDAR_ROW_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayCellInner: {
-    width: MIN_DAY_CELL_WIDTH,
-    height: MIN_DAY_CELL_WIDTH,
-    borderRadius: MIN_DAY_CELL_WIDTH / 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayCellInnerSelected: {
-    backgroundColor: theme.grassFilled,
-  },
-  dayText: {
-    fontSize: 13,
-    color: theme.text,
-    textAlign: "center",
-  },
-  dayTextDisabled: { color: theme.textSecondary, opacity: 0.4 },
-  dayTextSelected: { color: theme.background, fontWeight: "600" },
 });

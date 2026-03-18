@@ -1,13 +1,25 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
+import { type Theme } from "../theme";
 
 interface YearMonthHeaderProps {
   year: number;
   month: number;
 }
 
-export const YearMonthHeader = React.memo(function YearMonthHeader({ year, month }: YearMonthHeaderProps) {
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    text: {
+      fontSize: 26,
+      fontWeight: "700",
+      color: theme.text,
+    },
+  });
+
+export function YearMonthHeader({ year, month }: YearMonthHeaderProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   return (
     <View>
       <Text style={styles.text}>
@@ -15,12 +27,4 @@ export const YearMonthHeader = React.memo(function YearMonthHeader({ year, month
       </Text>
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  text: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: theme.text,
-  },
-});
+}

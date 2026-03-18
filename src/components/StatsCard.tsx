@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
+import { type Theme } from "../theme";
 
 interface StatsCardProps {
   progress: number;
@@ -9,7 +10,60 @@ interface StatsCardProps {
   subtitle?: string;
 }
 
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    statsCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 20,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: theme.textSecondary,
+      marginBottom: 14,
+      textAlign: "center",
+    },
+    statsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 14,
+    },
+    statItem: {
+      flex: 1,
+      alignItems: "center",
+    },
+    statValue: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.grassFilled,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: theme.textSecondary,
+    },
+    statDivider: {
+      width: 1,
+      height: 32,
+      backgroundColor: theme.border,
+    },
+    progressTrack: {
+      height: 4,
+      backgroundColor: theme.grassEmpty,
+      borderRadius: 2,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      backgroundColor: theme.grassFilled,
+      borderRadius: 2,
+    },
+  });
+
 export function StatsCard({ progress, elapsed, remaining, subtitle }: StatsCardProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   return (
     <View style={styles.statsCard}>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
@@ -35,53 +89,3 @@ export function StatsCard({ progress, elapsed, remaining, subtitle }: StatsCardP
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  statsCard: {
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    marginBottom: 14,
-    textAlign: "center",
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: theme.grassFilled,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: theme.textSecondary,
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: theme.border,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: theme.grassEmpty,
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: theme.grassFilled,
-    borderRadius: 2,
-  },
-});

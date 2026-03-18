@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
 
 export type CellState = "empty" | "filled" | "today" | "highlight";
 
@@ -9,15 +9,16 @@ interface DayCellProps {
   size?: number;
 }
 
-const CELL_COLORS: Record<CellState, string> = {
-  empty: theme.grassEmpty,
-  filled: theme.grassFilled,
-  today: theme.grassTodayCell,
-  highlight: theme.grassHighlight,
-};
-
-export const DayCell = React.memo(function DayCell({ state, size = 10 }: DayCellProps) {
-  const backgroundColor = CELL_COLORS[state];
+export function DayCell({ state, size = 10 }: DayCellProps) {
+  const { theme } = useTheme();
+  const backgroundColor =
+    state === "empty"
+      ? theme.grassEmpty
+      : state === "filled"
+      ? theme.grassFilled
+      : state === "today"
+      ? theme.grassTodayCell
+      : theme.grassHighlight;
 
   return (
     <View
@@ -29,4 +30,4 @@ export const DayCell = React.memo(function DayCell({ state, size = 10 }: DayCell
       }}
     />
   );
-});
+}

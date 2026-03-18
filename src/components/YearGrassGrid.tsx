@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { isLeapYear, getDayOfYear, isSameDay, chunkArray } from "../utils/dateUtils";
-import { COLUMNS } from "./gridConstants";
+import { COLUMNS, resolveCellState } from "./gridConstants";
+import type { CellState } from "./DayCell";
 import { useCellSize } from "../hooks/useCellSize";
 import { GrassGrid } from "./GrassGrid";
-import type { CellState } from "./DayCell";
 
 
 interface YearGrassGridProps {
@@ -28,10 +28,7 @@ export function YearGrassGrid({
       const filled = d <= endDayOfYear;
       const isEndDay = d === endDayOfYear;
       const isToday = isSameDay(new Date(year, 0, d), endDate);
-      let state: CellState = filled ? "filled" : "empty";
-      if (filled && isToday) state = "today";
-      else if (filled && isEndDay) state = "highlight";
-      cells.push(state);
+      cells.push(resolveCellState(filled, isToday, isEndDay));
     }
     return chunkArray(cells, COLUMNS);
   }, [year, endDate]);
