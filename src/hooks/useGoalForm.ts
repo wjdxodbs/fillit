@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Keyboard } from "react-native";
 import type { SavedDate } from "../types";
-import { toDateStr } from "../utils/dateUtils";
+import { toDateStr, parseDateStr } from "../utils/dateUtils";
 
 export function useGoalForm(
   add: (title: string, baseDate: string, targetDate: string) => Promise<unknown>,
@@ -21,32 +21,30 @@ export function useGoalForm(
   const [modalVisible, setModalVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [baseDate, setBaseDate] = useState("");
-  const [targetDate, setTargetDate] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState<false | "base" | "target">(false);
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [form, setForm] = useState({ title: "", baseDate: "", targetDate: "" });
+  const [picker, setPicker] = useState<{
+    show: false | "base" | "target";
+    viewYear: number;
+    viewMonth: number;
+  }>({ show: false, viewYear: today.getFullYear(), viewMonth: today.getMonth() });
+
+  const setTitle = (v: string) => setForm((prev) => ({ ...prev, title: v }));
 
   const canGoPrevMonth =
-    viewYear > today.getFullYear() ||
-    (viewYear === today.getFullYear() && viewMonth > today.getMonth());
+    picker.viewYear > today.getFullYear() ||
+    (picker.viewYear === today.getFullYear() && picker.viewMonth > today.getMonth());
   const canGoNextMonth =
-    viewYear < oneYearLater.getFullYear() ||
-    (viewYear === oneYearLater.getFullYear() &&
-      viewMonth < oneYearLater.getMonth());
+    picker.viewYear < oneYearLater.getFullYear() ||
+    (picker.viewYear === oneYearLater.getFullYear() &&
+      picker.viewMonth < oneYearLater.getMonth());
 
   const openAdd = useCallback(() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
     setToday(t);
     setEditingId(null);
-    setTitle("");
-    setBaseDate(toDateStr(t));
-    setTargetDate("");
-    setViewYear(t.getFullYear());
-    setViewMonth(t.getMonth());
-    setShowDatePicker(false);
+    setForm({ title: "", baseDate: toDateStr(t), targetDate: "" });
+    setPicker({ show: false, viewYear: t.getFullYear(), viewMonth: t.getMonth() });
     setModalVisible(true);
   }, []);
 
@@ -57,40 +55,33 @@ export function useGoalForm(
     minDate.setHours(0, 0, 0, 0);
     setToday(minDate);
     setEditingId(item.id);
-    setTitle(item.title);
-    setBaseDate(item.baseDate);
-    setTargetDate(item.targetDate);
-    const [y, m] = item.baseDate.split("-").map(Number);
-    setViewYear(y);
-    setViewMonth(m - 1);
-    setShowDatePicker(false);
+    setForm({ title: item.title, baseDate: item.baseDate, targetDate: item.targetDate });
+    const { year, month } = parseDateStr(item.baseDate);
+    setPicker({ show: false, viewYear: year, viewMonth: month });
     setModalVisible(true);
   }, []);
 
-  const closeModal = useCallback(() => {
+  const closeModal = () => {
     if (isSaving) return;
     setModalVisible(false);
-  }, [isSaving]);
+  };
 
   const goPrevMonth = useCallback(() => {
-    if (viewMonth === 0) {
-      setViewYear((y) => y - 1);
-      setViewMonth(11);
-    } else {
-      setViewMonth((m) => m - 1);
-    }
-  }, [viewMonth]);
+    setPicker((prev) => {
+      if (prev.viewMonth === 0) return { ...prev, viewYear: prev.viewYear - 1, viewMonth: 11 };
+      return { ...prev, viewMonth: prev.viewMonth - 1 };
+    });
+  }, []);
 
   const goNextMonth = useCallback(() => {
-    if (viewMonth === 11) {
-      setViewYear((y) => y + 1);
-      setViewMonth(0);
-    } else {
-      setViewMonth((m) => m + 1);
-    }
-  }, [viewMonth]);
+    setPicker((prev) => {
+      if (prev.viewMonth === 11) return { ...prev, viewYear: prev.viewYear + 1, viewMonth: 0 };
+      return { ...prev, viewMonth: prev.viewMonth + 1 };
+    });
+  }, []);
 
-  const save = useCallback(async () => {
+  const save = async () => {
+    const { title, baseDate, targetDate } = form;
     if (!title.trim() || !baseDate.trim() || !targetDate.trim()) return;
     if (baseDate > targetDate) {
       Alert.alert("날짜 오류", "목표 날짜는 기준 날짜 이후여야 합니다.");
@@ -109,77 +100,75 @@ export function useGoalForm(
     } finally {
       setIsSaving(false);
     }
-  }, [title, baseDate, targetDate, editingId, add, update]);
+  };
 
-  const openBasePicker = useCallback(() => {
+  const openBasePicker = () => {
     Keyboard.dismiss();
-    if (baseDate) {
-      const [y, m] = baseDate.split("-").map(Number);
-      setViewYear(y);
-      setViewMonth(m - 1);
+    if (form.baseDate) {
+      const { year, month } = parseDateStr(form.baseDate);
+      setPicker((prev) => ({ ...prev, show: "base", viewYear: year, viewMonth: month }));
+    } else {
+      setPicker((prev) => ({ ...prev, show: "base" }));
     }
-    setShowDatePicker("base");
-  }, [baseDate]);
+  };
 
-  const openTargetPicker = useCallback(() => {
+  const openTargetPicker = () => {
     Keyboard.dismiss();
-    if (targetDate) {
-      const [y, m] = targetDate.split("-").map(Number);
-      setViewYear(y);
-      setViewMonth(m - 1);
-    } else if (baseDate) {
-      const [y, m] = baseDate.split("-").map(Number);
-      setViewYear(y);
-      setViewMonth(m - 1);
+    if (form.targetDate) {
+      const { year, month } = parseDateStr(form.targetDate);
+      setPicker((prev) => ({ ...prev, show: "target", viewYear: year, viewMonth: month }));
+    } else if (form.baseDate) {
+      const { year, month } = parseDateStr(form.baseDate);
+      setPicker((prev) => ({ ...prev, show: "target", viewYear: year, viewMonth: month }));
+    } else {
+      setPicker((prev) => ({ ...prev, show: "target" }));
     }
-    setShowDatePicker("target");
-  }, [targetDate, baseDate]);
+  };
 
   const onSelectDate = useCallback(
     (dateStr: string) => {
       Keyboard.dismiss();
-      if (showDatePicker === "base") {
-        setBaseDate(dateStr);
-        const [y, m] = dateStr.split("-").map(Number);
-        setViewYear(y);
-        setViewMonth(m - 1);
-        setShowDatePicker("target");
+      if (picker.show === "base") {
+        const { year, month } = parseDateStr(dateStr);
+        setForm((prev) => ({ ...prev, baseDate: dateStr }));
+        setPicker({ show: "target", viewYear: year, viewMonth: month });
       } else {
-        setTargetDate(dateStr);
-        setShowDatePicker(false);
+        setForm((prev) => ({ ...prev, targetDate: dateStr }));
+        setPicker((prev) => ({ ...prev, show: false }));
       }
     },
-    [showDatePicker]
+    [picker.show]
   );
 
   let calendarMinDate: Date;
-  if (showDatePicker === "base") calendarMinDate = today;
-  else if (baseDate) calendarMinDate = new Date(baseDate + "T12:00:00");
+  if (picker.show === "base") calendarMinDate = today;
+  else if (form.baseDate) calendarMinDate = new Date(form.baseDate + "T12:00:00");
   else calendarMinDate = today;
 
   let calendarMaxDate: Date;
-  if (showDatePicker === "target") calendarMaxDate = oneYearLater;
-  else if (targetDate) calendarMaxDate = new Date(targetDate + "T12:00:00");
+  if (picker.show === "target") calendarMaxDate = oneYearLater;
+  else if (form.targetDate) calendarMaxDate = new Date(form.targetDate + "T12:00:00");
   else calendarMaxDate = oneYearLater;
-  const calendarSelectedDate = showDatePicker === "base" ? baseDate : targetDate;
+
+  const calendarSelectedDate = picker.show === "base" ? form.baseDate : form.targetDate;
 
   const canSave =
-    title.trim().length > 0 &&
-    targetDate.length > 0 &&
-    baseDate <= targetDate;
+    form.title.trim().length > 0 &&
+    form.targetDate.length > 0 &&
+    form.baseDate <= form.targetDate;
 
   return {
     modalVisible,
     editingId,
-    title,
+    title: form.title,
     setTitle,
-    baseDate,
-    targetDate,
+    baseDate: form.baseDate,
+    targetDate: form.targetDate,
     canSave,
     isSaving,
-    showDatePicker,
-    viewYear,
-    viewMonth,
+    showDatePicker: picker.show,
+    viewYear: picker.viewYear,
+    viewMonth: picker.viewMonth,
     canGoPrevMonth,
     canGoNextMonth,
     calendarMinDate,

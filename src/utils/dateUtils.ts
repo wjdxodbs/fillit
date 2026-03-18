@@ -71,3 +71,9 @@ export function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
+
+/** "YYYY-MM-DD" → { year, month(0-indexed) } */
+export function parseDateStr(dateStr: string): { year: number; month: number } {
+  const [y, m] = dateStr.split("-").map(Number);
+  return { year: y, month: m - 1 };
+}

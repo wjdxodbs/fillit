@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { SavedDate } from "../types";
 import { scheduleGoalReminder, cancelGoalReminder, rescheduleAllReminders } from "../utils/notifications";
@@ -13,6 +13,7 @@ function generateId(): string {
 export function useSavedDates() {
   const [dates, setDates] = useState<SavedDate[]>([]);
   const [loading, setLoading] = useState(true);
+  const datesRef = useRef<SavedDate[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -27,9 +28,11 @@ export function useSavedDates() {
         const targetDate = (item.targetDate as string) ?? date ?? "";
         return { id, title, baseDate, targetDate };
       });
+      datesRef.current = migrated;
       setDates(migrated);
       rescheduleAllReminders(migrated).catch(() => {});
     } catch {
+      datesRef.current = [];
       setDates([]);
     } finally {
       setLoading(false);
@@ -48,22 +51,23 @@ export function useSavedDates() {
         baseDate,
         targetDate,
       };
-      const next = [...dates, newItem];
+      const next = [...datesRef.current, newItem];
       try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {
         throw new Error("목표를 저장하지 못했습니다.");
       }
+      datesRef.current = next;
       setDates(next);
       scheduleGoalReminder(newItem).catch(() => {});
       return newItem;
     },
-    [dates]
+    []
   );
 
   const update = useCallback(
     async (id: string, title: string, baseDate: string, targetDate: string) => {
-      const next = dates.map((d) =>
+      const next = datesRef.current.map((d) =>
         d.id === id ? { ...d, title, baseDate, targetDate } : d
       );
       try {
@@ -71,26 +75,28 @@ export function useSavedDates() {
       } catch {
         throw new Error("목표를 수정하지 못했습니다.");
       }
+      datesRef.current = next;
       setDates(next);
       cancelGoalReminder(id).catch(() => {});
       scheduleGoalReminder({ id, title, baseDate, targetDate }).catch(() => {});
     },
-    [dates]
+    []
   );
 
   const remove = useCallback(
     async (id: string) => {
-      const next = dates.filter((d) => d.id !== id);
+      const next = datesRef.current.filter((d) => d.id !== id);
       try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {
         throw new Error("목표를 삭제하지 못했습니다.");
       }
+      datesRef.current = next;
       setDates(next);
       cancelGoalReminder(id).catch(() => {});
       resetWidgetsForGoal(id).catch(() => {});
     },
-    [dates]
+    []
   );
 
   return { dates, loading, add, update, remove, refresh: load };
