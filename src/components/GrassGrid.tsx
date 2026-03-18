@@ -9,7 +9,7 @@ interface GrassGridProps {
   cellSize: number;
 }
 
-export function GrassGrid({ rows, cellSize }: GrassGridProps) {
+export const GrassGrid = React.memo(function GrassGrid({ rows, cellSize }: GrassGridProps) {
   return (
     <View>
       {rows.map((row, rowIndex) => (
@@ -33,7 +33,7 @@ export function GrassGrid({ rows, cellSize }: GrassGridProps) {
       ))}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

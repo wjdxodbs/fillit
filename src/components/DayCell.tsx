@@ -16,7 +16,7 @@ const CELL_COLORS: Record<CellState, string> = {
   highlight: theme.grassHighlight,
 };
 
-export function DayCell({ state, size = 10 }: DayCellProps) {
+export const DayCell = React.memo(function DayCell({ state, size = 10 }: DayCellProps) {
   const backgroundColor = CELL_COLORS[state];
 
   return (
@@ -29,4 +29,4 @@ export function DayCell({ state, size = 10 }: DayCellProps) {
       }}
     />
   );
-}
+});

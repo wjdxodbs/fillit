@@ -7,7 +7,7 @@ interface YearMonthHeaderProps {
   month: number;
 }
 
-export function YearMonthHeader({ year, month }: YearMonthHeaderProps) {
+export const YearMonthHeader = React.memo(function YearMonthHeader({ year, month }: YearMonthHeaderProps) {
   return (
     <View>
       <Text style={styles.text}>
@@ -15,7 +15,7 @@ export function YearMonthHeader({ year, month }: YearMonthHeaderProps) {
       </Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   text: {
