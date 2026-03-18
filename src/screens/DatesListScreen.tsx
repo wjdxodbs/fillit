@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -12,8 +13,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useSavedDates } from "../hooks/useSavedDates";
 import { useGoalForm } from "../hooks/useGoalForm";
@@ -22,17 +24,9 @@ import { GoalListItem } from "../components/GoalListItem";
 import { theme } from "../theme";
 import { formatDate, toDateStr } from "../utils/dateUtils";
 
-export function DatesListScreen({
-  navigation,
-}: {
-  navigation: {
-    navigate: (
-      name: string,
-      params: { title: string; baseDate: string; targetDate: string }
-    ) => void;
-  };
-}) {
-  const insets = useSafeAreaInsets();
+type Props = NativeStackScreenProps<DatesStackParamList, "DatesList">;
+
+export function DatesListScreen({ navigation }: Props) {
   const { dates, loading, add, remove } = useSavedDates();
   const [todayStr, setTodayStr] = useState(() => toDateStr(new Date()));
   useFocusEffect(
@@ -67,6 +61,7 @@ export function DatesListScreen({
     closeModal,
     save,
     canSave,
+    isSaving,
     goPrevMonth,
     goNextMonth,
     openBasePicker,
@@ -74,14 +69,19 @@ export function DatesListScreen({
     onSelectDate,
   } = useGoalForm(add);
 
-  return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: 16 + insets.top }]}>
-        <Text style={styles.headerTitle}>목표일 설정</Text>
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
         <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
           <Ionicons name="add" size={24} color={theme.grassFilled} />
         </TouchableOpacity>
-      </View>
+      ),
+    });
+  }, [navigation, openAdd]);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.separator} />
       {loading ? (
         <Text style={styles.loading}>불러오는 중...</Text>
       ) : (
@@ -119,7 +119,10 @@ export function DatesListScreen({
                   {
                     text: "삭제",
                     style: "destructive",
-                    onPress: () => remove(item.id),
+                    onPress: () =>
+                      remove(item.id).catch(() =>
+                        Alert.alert("삭제 실패", "목표를 삭제하지 못했습니다. 다시 시도해주세요.")
+                      ),
                   },
                 ])
               }
@@ -220,11 +223,15 @@ export function DatesListScreen({
                 <Text style={styles.cancelBtnText}>취소</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.saveBtn, !canSave && styles.saveBtnDisabled]}
+                style={[styles.modalBtn, styles.saveBtn, (!canSave || isSaving) && styles.saveBtnDisabled]}
                 onPress={save}
-                disabled={!canSave}
+                disabled={!canSave || isSaving}
               >
-                <Text style={styles.saveBtnText}>저장</Text>
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.saveBtnText}>저장</Text>
+                )}
               </TouchableOpacity>
             </View>
           </Pressable>
@@ -239,25 +246,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.background,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.08)",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: theme.text,
-  },
   addBtn: {
-    padding: 12,
+    padding: 8,
     justifyContent: "center",
     alignItems: "center",
+  },
+  separator: {
+    height: 1,
+    backgroundColor: theme.border,
   },
   list: {
     padding: 20,
