@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { SavedDate } from "../types";
 import { scheduleGoalReminder, cancelGoalReminder, rescheduleAllReminders } from "../utils/notifications";
+import { resetWidgetsForGoal } from "../widgets/widget-task-handler";
 
 const STORAGE_KEY = "saved_dates";
 
@@ -47,7 +48,11 @@ export function useSavedDates() {
         targetDate,
       };
       const next = [...dates, newItem];
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        throw new Error("목표를 저장하지 못했습니다.");
+      }
       setDates(next);
       scheduleGoalReminder(newItem).catch(() => {});
       return newItem;
@@ -58,9 +63,14 @@ export function useSavedDates() {
   const remove = useCallback(
     async (id: string) => {
       const next = dates.filter((d) => d.id !== id);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        throw new Error("목표를 삭제하지 못했습니다.");
+      }
       setDates(next);
       cancelGoalReminder(id).catch(() => {});
+      resetWidgetsForGoal(id).catch(() => {});
     },
     [dates]
   );
