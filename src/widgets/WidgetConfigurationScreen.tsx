@@ -94,10 +94,7 @@ export function WidgetConfigurationScreen({
   return (
     <View
       style={containerStyle}
-      onLayout={(e) => {
-        const w = e.nativeEvent.layout.width;
-        if (w >= MIN_VALID_WIDTH) setLayoutWidth(w);
-      }}
+      onLayout={handleLayout}
     >
       <ScrollView
         style={[styles.scroll, { width }]}

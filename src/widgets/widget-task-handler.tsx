@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { requestWidgetUpdateById } from "react-native-android-widget";
 import type { WidgetTaskHandlerProps } from "react-native-android-widget";
 import { FillitGrassWidget } from "./FillitGrassWidget";
+import type { FillitGrassWidgetProps } from "./FillitGrassWidget";
 import type { WidgetConfig } from "./widget-config";
 import { widgetConfigKey } from "./widget-config";
 import {
@@ -14,26 +15,8 @@ import {
   toDateStr,
 } from "../utils/dateUtils";
 
-type WidgetData = {
-  title: string;
-  baseDate: string;
-  targetDate: string;
-  filledUpTo: number;
-  totalDays: number;
-  clickUrl: string;
-};
-
-export function renderFillitWidget(data: WidgetData) {
-  return (
-    <FillitGrassWidget
-      title={data.title}
-      baseDate={data.baseDate}
-      targetDate={data.targetDate}
-      filledUpTo={data.filledUpTo}
-      totalDays={data.totalDays}
-      clickUrl={data.clickUrl}
-    />
-  );
+export function renderFillitWidget(data: FillitGrassWidgetProps) {
+  return <FillitGrassWidget {...data} />;
 }
 
 /** 올해(1년) 기준 위젯 데이터 */
@@ -111,14 +94,7 @@ export async function resetWidgetsForGoal(goalId: string): Promise<void> {
   );
 }
 
-export async function getWidgetDataForConfig(widgetId: number): Promise<{
-  title: string;
-  baseDate: string;
-  targetDate: string;
-  filledUpTo: number;
-  totalDays: number;
-  clickUrl: string;
-}> {
+export async function getWidgetDataForConfig(widgetId: number): Promise<FillitGrassWidgetProps> {
   const config = await readWidgetConfig(widgetId);
   if (!config || config.mode === "year") return getYearWidgetData();
   return getSavedDateWidgetData(config.title, config.baseDate, config.targetDate);
