@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Modal,
@@ -12,16 +12,20 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
 import type { SavedDate } from "../types";
-import { getDaysBetween, getElapsedDays, formatDate, toDateStr, calcProgress } from "../utils/dateUtils";
+import { getDaysBetween, getElapsedDays, formatDate, calcProgress } from "../utils/dateUtils";
+
+const PROGRESS_GRADIENT_COLORS = ["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"] as const;
+const COMPLETED_BADGE_BG = "rgba(0,196,154,0.15)";
 
 interface GoalListItemProps {
   item: SavedDate;
+  todayStr: string;
   onPress: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-export function GoalListItem({ item, onPress, onEdit, onDelete }: GoalListItemProps) {
+export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, onPress, onEdit, onDelete }: GoalListItemProps) {
   const [menuVisible, setMenuVisible] = useState(false);
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const sheetTranslateY = useRef(new Animated.Value(300)).current;
@@ -33,7 +37,7 @@ export function GoalListItem({ item, onPress, onEdit, onDelete }: GoalListItemPr
         Animated.timing(sheetTranslateY, { toValue: 0, duration: 280, useNativeDriver: true }),
       ]).start();
     }
-  }, [menuVisible, backdropOpacity, sheetTranslateY]);
+  }, [menuVisible]);
 
   const closeSheet = useCallback((callback?: () => void) => {
     Animated.parallel([
@@ -45,18 +49,21 @@ export function GoalListItem({ item, onPress, onEdit, onDelete }: GoalListItemPr
     });
   }, [backdropOpacity, sheetTranslateY]);
 
-  const totalDays = getDaysBetween(item.baseDate, item.targetDate);
-  const todayStr = toDateStr(new Date());
-  const isCompleted = todayStr > item.targetDate;
-  const elapsedDays = getElapsedDays(item.baseDate, item.targetDate, totalDays, todayStr);
-  const progressPercent = calcProgress(elapsedDays, totalDays);
+  const { isCompleted, progressPercent } = useMemo(() => {
+    const totalDays = getDaysBetween(item.baseDate, item.targetDate);
+    const elapsedDays = getElapsedDays(item.baseDate, item.targetDate, totalDays, todayStr);
+    return {
+      isCompleted: todayStr > item.targetDate,
+      progressPercent: calcProgress(elapsedDays, totalDays),
+    };
+  }, [item.baseDate, item.targetDate, todayStr]);
 
   return (
     <>
       <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={onPress}>
         <View style={styles.itemProgressBgWrap}>
           <LinearGradient
-            colors={["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"]}
+            colors={PROGRESS_GRADIENT_COLORS}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[
@@ -123,7 +130,7 @@ export function GoalListItem({ item, onPress, onEdit, onDelete }: GoalListItemPr
       </Modal>
     </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   item: {
@@ -187,7 +194,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    backgroundColor: "rgba(0,196,154,0.15)",
+    backgroundColor: COMPLETED_BADGE_BG,
     borderRadius: 6,
   },
   completedBadgeText: {
@@ -242,7 +249,7 @@ const styles = StyleSheet.create({
   },
   sheetActionDelete: {
     fontSize: 16,
-    color: "#ef4444",
+    color: theme.danger,
     fontWeight: "500",
   },
 });

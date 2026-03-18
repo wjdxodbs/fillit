@@ -14,4 +14,5 @@ export const theme = {
   border: "#333333",
   tabActive: MAIN_COLOR,
   tabInactive: "#8e8e8e",
+  danger: "#ef4444",
 } as const;
