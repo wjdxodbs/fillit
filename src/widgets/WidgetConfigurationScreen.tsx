@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   type LayoutChangeEvent,
@@ -25,7 +25,7 @@ import { widgetConfigKey } from "./widget-config";
 import type { SavedDate } from "../types";
 import { useSavedDates } from "../hooks/useSavedDates";
 import { formatDate } from "../utils/dateUtils";
-import { theme } from "../theme";
+import { darkTheme as theme } from "../theme";
 
 const MIN_VALID_WIDTH = 200;
 
@@ -41,38 +41,35 @@ export function WidgetConfigurationScreen({
 
   const width = layoutWidth ?? effectiveWidth;
 
-  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+  const handleLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
     if (w >= MIN_VALID_WIDTH) setLayoutWidth(w);
-  }, []);
+  };
 
-  const finishWith = useCallback(
-    async (config: WidgetConfig) => {
-      await AsyncStorage.setItem(
-        widgetConfigKey(widgetInfo.widgetId),
-        JSON.stringify(config)
-      );
-      const data =
-        config.mode === "year"
-          ? getYearWidgetData()
-          : getSavedDateWidgetData(
-              config.title,
-              config.baseDate,
-              config.targetDate
-            );
-      renderWidget(renderFillitWidget(data));
-      await requestWidgetUpdateById({
-        widgetName: "FillitGrass",
-        widgetId: widgetInfo.widgetId,
-        renderWidget: async (info) => {
-          const widgetData = await getWidgetDataForConfig(info.widgetId);
-          return renderFillitWidget(widgetData);
-        },
-      });
-      setResult("ok");
-    },
-    [widgetInfo.widgetId, renderWidget, setResult]
-  );
+  const finishWith = async (config: WidgetConfig) => {
+    await AsyncStorage.setItem(
+      widgetConfigKey(widgetInfo.widgetId),
+      JSON.stringify(config)
+    );
+    const data =
+      config.mode === "year"
+        ? getYearWidgetData()
+        : getSavedDateWidgetData(
+            config.title,
+            config.baseDate,
+            config.targetDate
+          );
+    renderWidget(renderFillitWidget(data));
+    await requestWidgetUpdateById({
+      widgetName: "FillitGrass",
+      widgetId: widgetInfo.widgetId,
+      renderWidget: async (info) => {
+        const widgetData = await getWidgetDataForConfig(info.widgetId);
+        return renderFillitWidget(widgetData);
+      },
+    });
+    setResult("ok");
+  };
 
   const year = new Date().getFullYear();
   const yearTitle = `${year}년`;

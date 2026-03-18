@@ -1,11 +1,11 @@
 import React from "react";
 import { FlexWidget, SvgWidget, TextWidget } from "react-native-android-widget";
 import { formatDate, calcProgress } from "../utils/dateUtils";
-import { theme } from "../theme";
+import { darkTheme as theme } from "../theme";
+import { COLUMNS } from "../components/gridConstants";
 
 const GRASS_FILLED = theme.grassFilled;
 const GRASS_EMPTY = theme.grassEmpty;
-const COLS = 16;
 const CELL_SIZE = 6;
 const GAP = 1;
 
@@ -36,8 +36,8 @@ export function FillitGrassWidget({
   totalDays,
   clickUrl,
 }: FillitGrassWidgetProps) {
-  const ROWS = Math.ceil(totalDays / COLS);
-  const width = COLS * CELL_SIZE + (COLS - 1) * GAP;
+  const ROWS = Math.ceil(totalDays / COLUMNS);
+  const width = COLUMNS * CELL_SIZE + (COLUMNS - 1) * GAP;
   const height = ROWS * CELL_SIZE + (ROWS - 1) * GAP;
   const progress = calcProgress(filledUpTo, totalDays);
   const remaining = totalDays - filledUpTo;
@@ -45,8 +45,8 @@ export function FillitGrassWidget({
   const rects = Array.from({ length: totalDays }, (_, i) => {
     const dayIndex = i + 1; // filledUpTo는 1-based이므로 변환
     const filled = dayIndex <= filledUpTo;
-    const row = Math.floor(i / COLS);
-    const col = i % COLS;
+    const row = Math.floor(i / COLUMNS);
+    const col = i % COLUMNS;
     const x = col * (CELL_SIZE + GAP);
     const y = row * (CELL_SIZE + GAP);
     const fill = filled ? GRASS_FILLED : GRASS_EMPTY;

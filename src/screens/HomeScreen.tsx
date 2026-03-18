@@ -2,15 +2,43 @@ import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTodayStr } from "../hooks/useTodayStr";
+import { useTheme } from "../stores/themeStore";
 import { WeekDateStrip } from "../components/WeekDateStrip";
 import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
 import { StatsCard } from "../components/StatsCard";
-import { theme } from "../theme";
+import { ThemeSelector } from "../components/ThemeSelector";
+import { type Theme } from "../theme";
 import { isLeapYear, getDayOfYear, calcProgress } from "../utils/dateUtils";
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    content: {
+      padding: 20,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 20,
+    },
+    dateStripWrap: {
+      width: "100%",
+    },
+    gridWrap: {
+      width: "100%",
+      alignItems: "flex-start",
+    },
+  });
 
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const todayStr = useTodayStr();
   const { today, year, month, date, elapsed, remaining, progress } = useMemo(() => {
     const today = new Date(todayStr + "T12:00:00");
@@ -38,6 +66,7 @@ export function HomeScreen() {
     >
       <View style={styles.headerRow}>
         <YearMonthHeader year={year} month={month} />
+        <ThemeSelector />
       </View>
       <View style={styles.dateStripWrap}>
         <WeekDateStrip year={year} month={month} todayDate={date} />
@@ -49,25 +78,3 @@ export function HomeScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  content: {
-    padding: 20,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dateStripWrap: {
-    width: "100%",
-  },
-  gridWrap: {
-    width: "100%",
-    alignItems: "flex-start",
-  },
-});

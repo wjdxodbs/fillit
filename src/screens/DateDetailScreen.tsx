@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useTodayStr } from "../hooks/useTodayStr";
+import { useTheme } from "../stores/themeStore";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import { RangeGrassGrid } from "../components/RangeGrassGrid";
 import { StatsCard } from "../components/StatsCard";
-import { theme } from "../theme";
+import { type Theme } from "../theme";
 import {
   getDaysBetween,
   getElapsedDays,
@@ -15,18 +16,37 @@ import {
 
 type Props = NativeStackScreenProps<DatesStackParamList, "DateDetail">;
 
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: theme.border,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      padding: 20,
+      paddingTop: 24,
+    },
+    gridWrap: {
+      width: "100%",
+      alignItems: "flex-start",
+    },
+  });
+
 export function DateDetailScreen({ route }: Props) {
-  const { title, baseDate, targetDate } = route.params;
-  const totalBlocks = useMemo(
-    () => getDaysBetween(baseDate, targetDate),
-    [baseDate, targetDate],
-  );
+  const { baseDate, targetDate } = route.params;
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const totalBlocks = getDaysBetween(baseDate, targetDate);
   const todayStr = useTodayStr();
   const isCompleted = todayStr > targetDate;
-  const elapsedDays = useMemo(
-    () => getElapsedDays(baseDate, targetDate, totalBlocks, todayStr),
-    [baseDate, targetDate, totalBlocks, todayStr],
-  );
+  const elapsedDays = getElapsedDays(baseDate, targetDate, totalBlocks, todayStr);
   const progress = calcProgress(elapsedDays, totalBlocks);
   const remainingDays = totalBlocks - elapsedDays;
 
@@ -55,25 +75,3 @@ export function DateDetailScreen({ route }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: theme.border,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    paddingTop: 24,
-  },
-  gridWrap: {
-    width: "100%",
-    alignItems: "flex-start",
-  },
-});

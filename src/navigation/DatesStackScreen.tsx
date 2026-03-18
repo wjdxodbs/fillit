@@ -2,7 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { DatesListScreen } from "../screens/DatesListScreen";
 import { DateDetailScreen } from "../screens/DateDetailScreen";
-import { theme } from "../theme";
+import { useTheme } from "../stores/themeStore";
 
 export type DatesStackParamList = {
   DatesList: undefined;
@@ -12,6 +12,7 @@ export type DatesStackParamList = {
 const DatesStack = createNativeStackNavigator<DatesStackParamList>();
 
 export function DatesStackScreen() {
+  const { theme } = useTheme();
   return (
     <DatesStack.Navigator
       screenOptions={{

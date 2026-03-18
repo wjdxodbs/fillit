@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   Animated,
   ActivityIndicator,
@@ -15,17 +15,45 @@ import {
   View,
 } from "react-native";
 import { useTodayStr } from "../hooks/useTodayStr";
+import { useTheme } from "../stores/themeStore";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { useSavedDates } from "../hooks/useSavedDates";
+import type { SavedDate } from "../types";
 import { useGoalForm } from "../hooks/useGoalForm";
 import { SimpleCalendar } from "../components/SimpleCalendar";
 import { GoalListItem } from "../components/GoalListItem";
-import { theme } from "../theme";
+import { type Theme } from "../theme";
 import { formatDate } from "../utils/dateUtils";
 
-function SkeletonItem({ opacity }: { opacity: Animated.Value }) {
+function SkeletonItem({ opacity, theme }: { opacity: Animated.Value; theme: Theme }) {
+  const skeletonStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        item: {
+          backgroundColor: theme.surface,
+          borderRadius: 12,
+          paddingVertical: 18,
+          paddingHorizontal: 16,
+          marginBottom: 10,
+        },
+        titleBar: {
+          height: 14,
+          width: "60%",
+          backgroundColor: theme.border,
+          borderRadius: 6,
+          marginBottom: 8,
+        },
+        dateBar: {
+          height: 11,
+          width: "40%",
+          backgroundColor: theme.border,
+          borderRadius: 6,
+        },
+      }),
+    [theme]
+  );
   return (
     <Animated.View style={[skeletonStyles.item, { opacity }]}>
       <View style={skeletonStyles.titleBar} />
@@ -35,6 +63,7 @@ function SkeletonItem({ opacity }: { opacity: Animated.Value }) {
 }
 
 function SkeletonList() {
+  const { theme } = useTheme();
   const opacity = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     const anim = Animated.loop(
@@ -47,17 +76,152 @@ function SkeletonList() {
     return () => anim.stop();
   }, [opacity]);
   return (
-    <View style={skeletonStyles.container}>
+    <View style={{ padding: 20 }}>
       {[0, 1].map((i) => (
-        <SkeletonItem key={i} opacity={opacity} />
+        <SkeletonItem key={i} opacity={opacity} theme={theme} />
       ))}
     </View>
   );
 }
 
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    addBtn: {
+      padding: 8,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    separator: {
+      height: 1,
+      backgroundColor: theme.border,
+    },
+    list: {
+      padding: 20,
+      paddingBottom: 40,
+    },
+    emptyState: {
+      alignItems: "center",
+      marginTop: 60,
+      gap: 8,
+    },
+    emptyTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.text,
+      marginTop: 8,
+    },
+    emptySubtitle: {
+      fontSize: 13,
+      color: theme.textSecondary,
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.text,
+      textAlign: "center",
+      marginBottom: 16,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    modal: {
+      width: "100%",
+      maxWidth: 340,
+      backgroundColor: theme.surface,
+      borderRadius: 16,
+      padding: 24,
+    },
+    input: {
+      backgroundColor: "transparent",
+      paddingVertical: 14,
+      paddingHorizontal: 0,
+      fontSize: 16,
+      color: theme.text,
+      marginBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    dateRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      paddingBottom: 14,
+    },
+    dateArrowWrap: {
+      width: 20,
+      flexShrink: 0,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    dateButton: {
+      backgroundColor: "transparent",
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      justifyContent: "center",
+      borderRadius: 8,
+    },
+    dateButtonFocused: {
+      backgroundColor: theme.background,
+      borderRadius: 8,
+    },
+    dateButtonHalf: {
+      flex: 1,
+    },
+    dateButtonText: {
+      fontSize: 16,
+      color: theme.text,
+    },
+    dateButtonPlaceholder: {
+      color: theme.textSecondary,
+    },
+    datePickerContainer: {
+      marginBottom: 12,
+    },
+    modalActions: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 8,
+    },
+    modalBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: "center",
+    },
+    cancelBtn: {
+      backgroundColor: theme.backgroundSecondary,
+    },
+    cancelBtnText: {
+      color: theme.textSecondary,
+    },
+    saveBtn: {
+      backgroundColor: theme.grassFilled,
+    },
+    saveBtnDisabled: {
+      opacity: 0.4,
+    },
+    saveBtnText: {
+      color: "#fff",
+      fontWeight: "600",
+    },
+  });
+
 type Props = NativeStackScreenProps<DatesStackParamList, "DatesList">;
 
 export function DatesListScreen({ navigation }: Props) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { dates, loading, add, update, remove } = useSavedDates();
   const todayStr = useTodayStr();
   const sortedDates = useMemo(() => {
@@ -97,6 +261,40 @@ export function DatesListScreen({ navigation }: Props) {
     onSelectDate,
   } = useGoalForm(add, update);
 
+  const handleNavigate = useCallback((item: SavedDate) => {
+    navigation.navigate("DateDetail", {
+      title: item.title,
+      baseDate: item.baseDate,
+      targetDate: item.targetDate,
+    });
+  }, [navigation]);
+
+  const handleEdit = useCallback((item: SavedDate) => openEdit(item), [openEdit]);
+
+  const handleDelete = useCallback((item: SavedDate) => {
+    Alert.alert("목표 삭제", `'${item.title}'을 삭제할까요?`, [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () =>
+          remove(item.id).catch(() =>
+            Alert.alert("삭제 실패", "목표를 삭제하지 못했습니다. 다시 시도해주세요.")
+          ),
+      },
+    ]);
+  }, [remove]);
+
+  const renderItem = useCallback(({ item }: { item: SavedDate }) => (
+    <GoalListItem
+      item={item}
+      todayStr={todayStr}
+      onPress={handleNavigate}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+    />
+  ), [todayStr, handleNavigate, handleEdit, handleDelete]);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: "목표일 설정",
@@ -106,7 +304,7 @@ export function DatesListScreen({ navigation }: Props) {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, openAdd]);
+  }, [navigation, openAdd, theme, styles.addBtn]);
 
   return (
     <View style={styles.container}>
@@ -133,33 +331,7 @@ export function DatesListScreen({ navigation }: Props) {
               </Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <GoalListItem
-              item={item}
-              todayStr={todayStr}
-              onPress={() =>
-                navigation.navigate("DateDetail", {
-                  title: item.title,
-                  baseDate: item.baseDate,
-                  targetDate: item.targetDate,
-                })
-              }
-              onEdit={() => openEdit(item)}
-              onDelete={() =>
-                Alert.alert("목표 삭제", `'${item.title}'을 삭제할까요?`, [
-                  { text: "취소", style: "cancel" },
-                  {
-                    text: "삭제",
-                    style: "destructive",
-                    onPress: () =>
-                      remove(item.id).catch(() =>
-                        Alert.alert("삭제 실패", "목표를 삭제하지 못했습니다. 다시 시도해주세요.")
-                      ),
-                  },
-                ])
-              }
-            />
-          )}
+          renderItem={renderItem}
         />
       )}
 
@@ -273,162 +445,3 @@ export function DatesListScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  addBtn: {
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: theme.border,
-  },
-  list: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  emptyState: {
-    alignItems: "center",
-    marginTop: 60,
-    gap: 8,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: theme.text,
-    marginTop: 8,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: theme.textSecondary,
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: theme.text,
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  modal: {
-    width: "100%",
-    maxWidth: 340,
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    padding: 24,
-  },
-  input: {
-    backgroundColor: "transparent",
-    paddingVertical: 14,
-    paddingHorizontal: 0,
-    fontSize: 16,
-    color: theme.text,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  dateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    paddingBottom: 14,
-  },
-  dateArrowWrap: {
-    width: 20,
-    flexShrink: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dateButton: {
-    backgroundColor: "transparent",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  dateButtonFocused: {
-    backgroundColor: theme.background,
-    borderRadius: 8,
-  },
-  dateButtonHalf: {
-    flex: 1,
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: theme.text,
-  },
-  dateButtonPlaceholder: {
-    color: theme.textSecondary,
-  },
-  datePickerContainer: {
-    marginBottom: 12,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-  },
-  modalBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  cancelBtn: {
-    backgroundColor: theme.backgroundSecondary,
-  },
-  cancelBtnText: {
-    color: theme.textSecondary,
-  },
-  saveBtn: {
-    backgroundColor: theme.grassFilled,
-  },
-  saveBtnDisabled: {
-    opacity: 0.4,
-  },
-  saveBtnText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-});
-
-const skeletonStyles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingTop: 20,
-  },
-  item: {
-    backgroundColor: theme.surface,
-    borderRadius: 12,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
-  titleBar: {
-    height: 14,
-    width: "60%",
-    backgroundColor: theme.border,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  dateBar: {
-    height: 11,
-    width: "40%",
-    backgroundColor: theme.border,
-    borderRadius: 6,
-  },
-});
