@@ -21,6 +21,7 @@ export function useSavedDates() {
       const migrated: SavedDate[] = parsed.map((item) => {
         const id = String(item.id ?? "");
         const title = String(item.title ?? "");
+        // 구버전 데이터 호환: 단일 date 필드 → baseDate/targetDate로 마이그레이션
         const date = item.date as string | undefined;
         const baseDate = (item.baseDate as string) ?? date ?? "";
         const targetDate = (item.targetDate as string) ?? date ?? "";
@@ -60,6 +61,23 @@ export function useSavedDates() {
     [dates]
   );
 
+  const update = useCallback(
+    async (id: string, title: string, baseDate: string, targetDate: string) => {
+      const next = dates.map((d) =>
+        d.id === id ? { ...d, title, baseDate, targetDate } : d
+      );
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        throw new Error("목표를 수정하지 못했습니다.");
+      }
+      setDates(next);
+      cancelGoalReminder(id).catch(() => {});
+      scheduleGoalReminder({ id, title, baseDate, targetDate }).catch(() => {});
+    },
+    [dates]
+  );
+
   const remove = useCallback(
     async (id: string) => {
       const next = dates.filter((d) => d.id !== id);
@@ -75,5 +93,5 @@ export function useSavedDates() {
     [dates]
   );
 
-  return { dates, loading, add, remove, refresh: load };
+  return { dates, loading, add, update, remove, refresh: load };
 }

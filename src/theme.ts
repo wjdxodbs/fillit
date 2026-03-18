@@ -1,5 +1,5 @@
 /** 앱 메인 색상 */
-export const MAIN_COLOR = "#00C49A";
+const MAIN_COLOR = "#00C49A";
 
 export const theme = {
   background: "#121212",

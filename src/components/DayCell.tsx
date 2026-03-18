@@ -9,15 +9,15 @@ interface DayCellProps {
   size?: number;
 }
 
+const CELL_COLORS: Record<CellState, string> = {
+  empty: theme.grassEmpty,
+  filled: theme.grassFilled,
+  today: theme.grassTodayCell,
+  highlight: theme.grassHighlight,
+};
+
 export function DayCell({ state, size = 10 }: DayCellProps) {
-  const backgroundColor =
-    state === "empty"
-      ? theme.grassEmpty
-      : state === "today"
-        ? theme.grassTodayCell
-        : state === "highlight"
-          ? theme.grassHighlight
-          : theme.grassFilled;
+  const backgroundColor = CELL_COLORS[state];
 
   return (
     <View

@@ -46,7 +46,7 @@ No test runner is configured in this project.
 - Header separator line (1px `theme.border`) is rendered as the first child `<View>` inside each screen's root container, not via navigator props
 
 ### State Management
-No Redux or Context. Goals are managed via the custom hook [useSavedDates.ts](src/hooks/useSavedDates.ts), which reads/writes an array of `SavedDate` objects to AsyncStorage under the key `saved_dates`.
+No Redux or Context. Goals are managed via the custom hook [useSavedDates.ts](src/hooks/useSavedDates.ts), which reads/writes an array of `SavedDate` objects to AsyncStorage under the key `saved_dates`. Exposes `add`, `update`, `remove`.
 
 ```typescript
 interface SavedDate {
@@ -57,11 +57,13 @@ interface SavedDate {
 }
 ```
 
-Modal form state and logic for adding goals is extracted into [useGoalForm.ts](src/hooks/useGoalForm.ts) (used by DatesListScreen).
+`useSavedDates` performs a migration on load: legacy items with a single `date` field are mapped to `baseDate`/`targetDate`.
+
+Modal form state and logic for adding/editing goals is extracted into [useGoalForm.ts](src/hooks/useGoalForm.ts) (used by DatesListScreen). It accepts both `add` and `update` callbacks and tracks `editingId` to distinguish add vs. edit mode.
 
 ### Shared UI Components
 - [StatsCard.tsx](src/components/StatsCard.tsx) — stats row (완료% / 경과 일수 / 남은 일수) + progress bar; used by both HomeScreen and DateDetailScreen
-- [GoalListItem.tsx](src/components/GoalListItem.tsx) — list row with gradient progress background; used by DatesListScreen
+- [GoalListItem.tsx](src/components/GoalListItem.tsx) — list row with gradient progress background; ellipsis button opens an animated bottom sheet with 수정/삭제 actions
 - [SimpleCalendar.tsx](src/components/SimpleCalendar.tsx) — inline month calendar for date picking; used by DatesListScreen modal
 - [WeekDateStrip.tsx](src/components/WeekDateStrip.tsx) — horizontal week strip showing today's context; used by HomeScreen
 - [YearMonthHeader.tsx](src/components/YearMonthHeader.tsx) — year/month label header; used by HomeScreen
@@ -70,20 +72,28 @@ Modal form state and logic for adding goals is extracted into [useGoalForm.ts](s
 - [GrassGrid.tsx](src/components/GrassGrid.tsx) — shared grid renderer; accepts `rows: CellState[][]` and `cellSize`, handles all row/cell layout logic
 - [YearGrassGrid.tsx](src/components/YearGrassGrid.tsx) — computes `CellState[][]` for the current year (Jan 1 → Dec 31), delegates rendering to `GrassGrid`
 - [RangeGrassGrid.tsx](src/components/RangeGrassGrid.tsx) — computes `CellState[][]` for a custom date range, delegates rendering to `GrassGrid`
-- [DayCell.tsx](src/components/DayCell.tsx) — individual cell; exports `CellState` type (`"empty" | "filled" | "today" | "highlight"`)
-- [gridConstants.ts](src/components/gridConstants.ts) — shared cell size / gap constants
+- [DayCell.tsx](src/components/DayCell.tsx) — individual cell; exports `CellState` type (`"empty" | "filled" | "today" | "highlight"`); color resolved via `CELL_COLORS` map
+- [gridConstants.ts](src/components/gridConstants.ts) — shared constants: `COLUMNS`, `CELL_GAP`, `GRID_HORIZONTAL_PADDING`, `WEEKDAYS`
+
+### Utilities
+[dateUtils.ts](src/utils/dateUtils.ts) contains all date/array helpers:
+- `toDateStr(date)` — Date → `"YYYY-MM-DD"`
+- `formatDate(str)` — `"YYYY-MM-DD"` → `"YYYY년 M월 D일"`
+- `getDaysBetween`, `getElapsedDays`, `getDayOfYear`, `isLeapYear`, `isSameDay`
+- `calcProgress(filled, total)` — returns `Math.round((filled / total) * 100)`, 0 if total is 0
+- `chunkArray<T>(arr, size)` — splits array into rows; used by grid components
 
 ### Android Widget System
 - [FillitGrassWidget.tsx](src/widgets/FillitGrassWidget.tsx) — widget UI using `react-native-android-widget` primitives (`FlexWidget`, `TextWidget`, `SvgWidget`); layout mirrors DateDetailScreen (title → stats card → grass grid)
-- [widget-task-handler.tsx](src/widgets/widget-task-handler.tsx) — loads config per widget ID from AsyncStorage and renders the appropriate widget data
+- [widget-task-handler.tsx](src/widgets/widget-task-handler.tsx) — loads config per widget ID from AsyncStorage and renders; exports `renderFillitWidget(data)` helper used by both this file and `WidgetConfigurationScreen` to avoid duplicating JSX
 - [widget-config.ts](src/widgets/widget-config.ts) — `WidgetConfig` type and `widgetConfigKey(widgetId)` storage key helper
-- [WidgetConfigurationScreen.tsx](src/widgets/WidgetConfigurationScreen.tsx) — settings UI shown when user adds/configures the widget
+- [WidgetConfigurationScreen.tsx](src/widgets/WidgetConfigurationScreen.tsx) — settings UI shown when user adds/configures the widget; shows skeleton loader while `useSavedDates` loads
 
 Widget supports two modes:
 - `"year"` — displays current year progress
 - `"date"` — displays a specific saved goal's progress
 
-Widget click navigation uses `clickAction="OPEN_URI"` with a `fillit://` deep link. The `fillit://` scheme is registered in `AndroidManifest.xml` and persisted via `withFillitNative.js`. All widget data helpers (`getYearWidgetData`, `getSavedDateWidgetData`, `getWidgetDataForConfig`) return a `clickUrl` field that must be passed to `FillitGrassWidget`.
+Widget click navigation uses `clickAction="OPEN_URI"` with a `fillit://` deep link. The `fillit://` scheme is registered in `AndroidManifest.xml` and persisted via `withFillitNative.js`. All widget data helpers (`getYearWidgetData`, `getSavedDateWidgetData`, `getWidgetDataForConfig`) return a `clickUrl` field that must be passed to `renderFillitWidget`.
 
 ### Native Plugin & Midnight Auto-Update
 - [plugins/withFillitNative.js](plugins/withFillitNative.js) — Expo config plugin that modifies `AndroidManifest.xml` (adds `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED` permissions and registers the broadcast receiver) and injects `scheduleNextMidnight()` into `MainApplication.onCreate`
