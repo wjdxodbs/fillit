@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { theme } from "../theme";
 
-type CellState = "empty" | "filled" | "today" | "highlight";
+export type CellState = "empty" | "filled" | "today" | "highlight";
 
 interface DayCellProps {
   state: CellState;
