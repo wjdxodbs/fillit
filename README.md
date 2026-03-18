@@ -6,16 +6,18 @@
 
 - **홈**: 현재 연도 잔디 그리드 (1/1 ~ 오늘), 연도 진행률(%)
 - **목표일 설정**: 제목 + 시작일/목표일로 등록, 목록에서 클릭 시 해당 구간 잔디·진행률 상세 화면
+- **Android 홈 화면 위젯**: 연도 또는 목표 진행률을 홈 화면에 표시, 자정(KST)마다 자동 갱신, 위젯 클릭 시 앱으로 이동
 - 다크 테마
 
 ## 실행
 
+> Expo Go에서는 위젯·알림 기능이 동작하지 않습니다. Development Build를 사용하세요.
+
 ```bash
 npm install
-npx expo start
+npm run android   # Android (네이티브 빌드 필요)
+npm run ios       # iOS
 ```
-
-Android/iOS 시뮬레이터 또는 Expo Go 앱으로 실행할 수 있습니다.
 
 ## APK 빌드 (설치용 apk 파일 만들기)
 
@@ -59,9 +61,12 @@ eas build --platform android --profile preview
 
 - `preview` 프로필은 **APK**를 만듭니다 (기기/에뮬레이터 직접 설치용).
 - Play Store에 올릴 때는 `eas build --platform android --profile production`으로 **AAB**를 빌드합니다.
+- 네이티브 플러그인(`plugins/withFillitNative.js`) 수정 후에는 `npx expo prebuild --platform android`를 실행해야 합니다.
 
 ## 기술 스택
 
 - Expo (React Native)
 - React Navigation (Bottom Tabs + Native Stack)
-- AsyncStorage (등록 날짜 저장)
+- AsyncStorage (목표 데이터 저장)
+- react-native-android-widget (홈 화면 위젯)
+- expo-notifications (알림)

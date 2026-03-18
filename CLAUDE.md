@@ -42,6 +42,8 @@ No test runner is configured in this project.
 - **Home tab** → [HomeScreen.tsx](src/screens/HomeScreen.tsx) — current year grass grid progress
 - **Goals tab** → [DatesListScreen.tsx](src/screens/DatesListScreen.tsx) — CRUD for goal date ranges → [DateDetailScreen.tsx](src/screens/DateDetailScreen.tsx) — grass grid for a specific goal range
 - Stack navigator for the Goals tab lives in [DatesStackScreen.tsx](src/navigation/DatesStackScreen.tsx)
+- Tab bar is hidden on `DateDetail` screen via `getFocusedRouteNameFromRoute` in `App.tsx`
+- Header separator line (1px `theme.border`) is rendered as the first child `<View>` inside each screen's root container, not via navigator props
 
 ### State Management
 No Redux or Context. Goals are managed via the custom hook [useSavedDates.ts](src/hooks/useSavedDates.ts), which reads/writes an array of `SavedDate` objects to AsyncStorage under the key `saved_dates`.
@@ -65,10 +67,11 @@ Modal form state and logic for adding goals is extracted into [useGoalForm.ts](s
 - [YearMonthHeader.tsx](src/components/YearMonthHeader.tsx) — year/month label header; used by HomeScreen
 
 ### Grass Grid Components
-- [YearGrassGrid.tsx](src/components/YearGrassGrid.tsx) — 16-column grid for the current year (Jan 1 → Dec 31)
-- [RangeGrassGrid.tsx](src/components/RangeGrassGrid.tsx) — grid for a custom date range
-- [DayCell.tsx](src/components/DayCell.tsx) — individual cell with states: empty, filled, today, highlight
-- [gridConstants.ts](src/components/gridConstants.ts) — shared cell size / gap constants used by both grid components
+- [GrassGrid.tsx](src/components/GrassGrid.tsx) — shared grid renderer; accepts `rows: CellState[][]` and `cellSize`, handles all row/cell layout logic
+- [YearGrassGrid.tsx](src/components/YearGrassGrid.tsx) — computes `CellState[][]` for the current year (Jan 1 → Dec 31), delegates rendering to `GrassGrid`
+- [RangeGrassGrid.tsx](src/components/RangeGrassGrid.tsx) — computes `CellState[][]` for a custom date range, delegates rendering to `GrassGrid`
+- [DayCell.tsx](src/components/DayCell.tsx) — individual cell; exports `CellState` type (`"empty" | "filled" | "today" | "highlight"`)
+- [gridConstants.ts](src/components/gridConstants.ts) — shared cell size / gap constants
 
 ### Android Widget System
 - [FillitGrassWidget.tsx](src/widgets/FillitGrassWidget.tsx) — widget UI using `react-native-android-widget` primitives (`FlexWidget`, `TextWidget`, `SvgWidget`); layout mirrors DateDetailScreen (title → stats card → grass grid)
@@ -79,6 +82,8 @@ Modal form state and logic for adding goals is extracted into [useGoalForm.ts](s
 Widget supports two modes:
 - `"year"` — displays current year progress
 - `"date"` — displays a specific saved goal's progress
+
+Widget click navigation uses `clickAction="OPEN_URI"` with a `fillit://` deep link. The `fillit://` scheme is registered in `AndroidManifest.xml` and persisted via `withFillitNative.js`. All widget data helpers (`getYearWidgetData`, `getSavedDateWidgetData`, `getWidgetDataForConfig`) return a `clickUrl` field that must be passed to `FillitGrassWidget`.
 
 ### Native Plugin & Midnight Auto-Update
 - [plugins/withFillitNative.js](plugins/withFillitNative.js) — Expo config plugin that modifies `AndroidManifest.xml` (adds `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED` permissions and registers the broadcast receiver) and injects `scheduleNextMidnight()` into `MainApplication.onCreate`
