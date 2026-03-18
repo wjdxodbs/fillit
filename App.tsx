@@ -4,9 +4,10 @@ import { setupNotificationChannel, requestNotificationPermission } from "./src/u
 import { DatesStackScreen } from "./src/navigation/DatesStackScreen";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
-import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
-import type { LinkingOptions } from "@react-navigation/native";
+import { DefaultTheme, NavigationContainer, getFocusedRouteNameFromRoute } from "@react-navigation/native";
+import type { LinkingOptions, NavigatorScreenParams } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import type { DatesStackParamList } from "./src/navigation/DatesStackScreen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { HomeScreen } from "./src/screens/HomeScreen";
@@ -28,10 +29,14 @@ const AppTheme = {
   },
 };
 
-const Tab = createBottomTabNavigator();
+type RootTabParamList = {
+  Home: undefined;
+  Dates: NavigatorScreenParams<DatesStackParamList>;
+};
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const linking: LinkingOptions<any> = {
+const Tab = createBottomTabNavigator<RootTabParamList>();
+
+const linking: LinkingOptions<RootTabParamList> = {
   prefixes: ["fillit://"],
   config: {
     screens: {
@@ -67,6 +72,7 @@ export default function App() {
               targetDate={data.targetDate}
               filledUpTo={data.filledUpTo}
               totalDays={data.totalDays}
+              clickUrl={data.clickUrl}
             />
           );
         },
@@ -144,7 +150,7 @@ export default function App() {
             <Tab.Screen
               name="Dates"
               component={DatesStackScreen}
-              options={{
+              options={({ route }) => ({
                 tabBarLabel: "목표일 설정",
                 tabBarIcon: ({ focused, color, size }) => (
                   <Ionicons
@@ -153,7 +159,15 @@ export default function App() {
                     color={color}
                   />
                 ),
-              }}
+                tabBarStyle: getFocusedRouteNameFromRoute(route) === "DateDetail"
+                  ? { display: "none" }
+                  : {
+                      backgroundColor: "transparent",
+                      borderTopWidth: 0,
+                      height: 64,
+                      paddingBottom: 0,
+                    },
+              })}
             />
           </Tab.Navigator>
         </View>
