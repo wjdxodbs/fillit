@@ -1,5 +1,6 @@
-import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   ActivityIndicator,
   Alert,
   FlatList,
@@ -24,10 +25,38 @@ import { GoalListItem } from "../components/GoalListItem";
 import { theme } from "../theme";
 import { formatDate, toDateStr } from "../utils/dateUtils";
 
+function SkeletonItem({ opacity }: { opacity: Animated.Value }) {
+  return (
+    <Animated.View style={[skeletonStyles.item, { opacity }]}>
+      <View style={skeletonStyles.titleBar} />
+      <View style={skeletonStyles.dateBar} />
+    </Animated.View>
+  );
+}
+
+function SkeletonList() {
+  const opacity = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [opacity]);
+  return (
+    <View style={skeletonStyles.container}>
+      {[0, 1].map((i) => (
+        <SkeletonItem key={i} opacity={opacity} />
+      ))}
+    </View>
+  );
+}
+
 type Props = NativeStackScreenProps<DatesStackParamList, "DatesList">;
 
 export function DatesListScreen({ navigation }: Props) {
-  const { dates, loading, add, remove } = useSavedDates();
+  const { dates, loading, add, update, remove } = useSavedDates();
   const [todayStr, setTodayStr] = useState(() => toDateStr(new Date()));
   useFocusEffect(
     useCallback(() => {
@@ -57,7 +86,9 @@ export function DatesListScreen({ navigation }: Props) {
     calendarMinDate,
     calendarMaxDate,
     calendarSelectedDate,
+    editingId,
     openAdd,
+    openEdit,
     closeModal,
     save,
     canSave,
@@ -67,10 +98,11 @@ export function DatesListScreen({ navigation }: Props) {
     openBasePicker,
     openTargetPicker,
     onSelectDate,
-  } = useGoalForm(add);
+  } = useGoalForm(add, update);
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      title: "목표일 설정",
       headerRight: () => (
         <TouchableOpacity style={styles.addBtn} onPress={openAdd}>
           <Ionicons name="add" size={24} color={theme.grassFilled} />
@@ -83,7 +115,7 @@ export function DatesListScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.separator} />
       {loading ? (
-        <Text style={styles.loading}>불러오는 중...</Text>
+        <SkeletonList />
       ) : (
         <FlatList
           data={sortedDates}
@@ -113,6 +145,7 @@ export function DatesListScreen({ navigation }: Props) {
                   targetDate: item.targetDate,
                 })
               }
+              onEdit={() => openEdit(item)}
               onDelete={() =>
                 Alert.alert("목표 삭제", `'${item.title}'을 삭제할까요?`, [
                   { text: "취소", style: "cancel" },
@@ -148,13 +181,14 @@ export function DatesListScreen({ navigation }: Props) {
             onPress={closeModal}
           />
           <Pressable style={styles.modal} onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.modalTitle}>목표 추가</Text>
+            <Text style={styles.modalTitle}>{editingId ? "목표 수정" : "목표 추가"}</Text>
             <TextInput
               style={styles.input}
               placeholder="제목"
               placeholderTextColor={theme.textSecondary}
               value={title}
               onChangeText={setTitle}
+              maxLength={30}
             />
             <View style={styles.dateRow}>
               <Pressable
@@ -258,11 +292,6 @@ const styles = StyleSheet.create({
   list: {
     padding: 20,
     paddingBottom: 40,
-  },
-  loading: {
-    color: theme.textSecondary,
-    textAlign: "center",
-    marginTop: 40,
   },
   emptyState: {
     alignItems: "center",
@@ -375,5 +404,32 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: "#fff",
     fontWeight: "600",
+  },
+});
+
+const skeletonStyles = StyleSheet.create({
+  container: {
+    padding: 20,
+    paddingTop: 20,
+  },
+  item: {
+    backgroundColor: theme.surface,
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  titleBar: {
+    height: 14,
+    width: "60%",
+    backgroundColor: theme.border,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  dateBar: {
+    height: 11,
+    width: "40%",
+    backgroundColor: theme.border,
+    borderRadius: 6,
   },
 });

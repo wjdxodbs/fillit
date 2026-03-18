@@ -11,12 +11,13 @@ import {
   getElapsedDays,
   formatDate,
   toDateStr,
+  calcProgress,
 } from "../utils/dateUtils";
 
 type Props = NativeStackScreenProps<DatesStackParamList, "DateDetail">;
 
 export function DateDetailScreen({ route }: Props) {
-  const { baseDate, targetDate } = route.params;
+  const { title, baseDate, targetDate } = route.params;
   const totalBlocks = useMemo(
     () => getDaysBetween(baseDate, targetDate),
     [baseDate, targetDate],
@@ -32,8 +33,7 @@ export function DateDetailScreen({ route }: Props) {
     () => getElapsedDays(baseDate, targetDate, totalBlocks, todayStr),
     [baseDate, targetDate, totalBlocks, todayStr],
   );
-  const progress =
-    totalBlocks > 0 ? Math.round((elapsedDays / totalBlocks) * 100) : 0;
+  const progress = calcProgress(elapsedDays, totalBlocks);
   const remainingDays = totalBlocks - elapsedDays;
 
   return (

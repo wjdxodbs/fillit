@@ -1,6 +1,4 @@
 import React from "react";
-import { TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { DatesListScreen } from "../screens/DatesListScreen";
 import { DateDetailScreen } from "../screens/DateDetailScreen";
@@ -21,28 +19,18 @@ export function DatesStackScreen() {
         headerTintColor: theme.text,
         headerTitleStyle: { fontWeight: "600" },
         headerShadowVisible: false,
+        animation: "fade",
       }}
     >
       <DatesStack.Screen
         name="DatesList"
         component={DatesListScreen}
-        options={{ title: "목표일 설정" }}
+        options={{ title: "" }}
       />
       <DatesStack.Screen
         name="DateDetail"
         component={DateDetailScreen}
-        options={({ navigation, route }) => ({
-          title: route.params.title,
-          headerTitleAlign: "center",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
-            >
-              <Ionicons name="chevron-back" size={22} color={theme.text} />
-            </TouchableOpacity>
-          ),
-        })}
+        options={({ route }) => ({ title: route.params.title })}
       />
     </DatesStack.Navigator>
   );
