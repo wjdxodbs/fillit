@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from "react";
+import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTodayStr } from "../hooks/useTodayStr";
 import { WeekDateStrip } from "../components/WeekDateStrip";
 import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
@@ -11,19 +11,24 @@ import { isLeapYear, getDayOfYear, calcProgress } from "../utils/dateUtils";
 
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const [today, setToday] = useState(() => new Date());
-  useFocusEffect(
-    useCallback(() => {
-      setToday(new Date());
-    }, []),
-  );
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const date = today.getDate();
-  const daysInYear = isLeapYear(year) ? 366 : 365;
-  const elapsed = getDayOfYear(today);
-  const remaining = daysInYear - elapsed;
-  const progress = Math.min(100, calcProgress(elapsed, daysInYear));
+  const todayStr = useTodayStr();
+  const { today, year, month, date, elapsed, remaining, progress } = useMemo(() => {
+    const today = new Date(todayStr + "T12:00:00");
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate();
+    const daysInYear = isLeapYear(year) ? 366 : 365;
+    const elapsed = getDayOfYear(today);
+    return {
+      today,
+      year,
+      month,
+      date,
+      elapsed,
+      remaining: daysInYear - elapsed,
+      progress: Math.min(100, calcProgress(elapsed, daysInYear)),
+    };
+  }, [todayStr]);
 
   return (
     <ScrollView

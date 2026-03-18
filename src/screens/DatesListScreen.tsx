@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   Animated,
   ActivityIndicator,
@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useTodayStr } from "../hooks/useTodayStr";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,7 +23,7 @@ import { useGoalForm } from "../hooks/useGoalForm";
 import { SimpleCalendar } from "../components/SimpleCalendar";
 import { GoalListItem } from "../components/GoalListItem";
 import { theme } from "../theme";
-import { formatDate, toDateStr } from "../utils/dateUtils";
+import { formatDate } from "../utils/dateUtils";
 
 function SkeletonItem({ opacity }: { opacity: Animated.Value }) {
   return (
@@ -37,12 +37,14 @@ function SkeletonItem({ opacity }: { opacity: Animated.Value }) {
 function SkeletonList() {
   const opacity = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, { toValue: 0.3, duration: 700, useNativeDriver: true }),
         Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    anim.start();
+    return () => anim.stop();
   }, [opacity]);
   return (
     <View style={skeletonStyles.container}>
@@ -57,12 +59,7 @@ type Props = NativeStackScreenProps<DatesStackParamList, "DatesList">;
 
 export function DatesListScreen({ navigation }: Props) {
   const { dates, loading, add, update, remove } = useSavedDates();
-  const [todayStr, setTodayStr] = useState(() => toDateStr(new Date()));
-  useFocusEffect(
-    useCallback(() => {
-      setTodayStr(toDateStr(new Date()));
-    }, [])
-  );
+  const todayStr = useTodayStr();
   const sortedDates = useMemo(() => {
     const isCompleted = (d: { targetDate: string }) => d.targetDate < todayStr;
     return [...dates].sort((a, b) => {
@@ -120,6 +117,7 @@ export function DatesListScreen({ navigation }: Props) {
         <FlatList
           data={sortedDates}
           keyExtractor={(item) => item.id}
+          removeClippedSubviews
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyState}>
@@ -138,6 +136,7 @@ export function DatesListScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <GoalListItem
               item={item}
+              todayStr={todayStr}
               onPress={() =>
                 navigation.navigate("DateDetail", {
                   title: item.title,
