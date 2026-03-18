@@ -1,18 +1,18 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "../theme";
-
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import { WEEKDAYS } from "./gridConstants";
 const CALENDAR_WEEKS = 6;
 const CALENDAR_ROW_HEIGHT = 36;
 const CALENDAR_ROW_GAP = 4;
 const CALENDAR_GRID_HEIGHT =
   CALENDAR_WEEKS * (CALENDAR_ROW_HEIGHT + CALENDAR_ROW_GAP) - CALENDAR_ROW_GAP;
 const CALENDAR_HEADER_HEIGHT = 44;
+const CALENDAR_HEADER_BOTTOM_GAP = 12;
 const CALENDAR_WEEKDAY_ROW_HEIGHT = 28;
 const CALENDAR_TOTAL_HEIGHT =
   CALENDAR_HEADER_HEIGHT +
-  12 +
+  CALENDAR_HEADER_BOTTOM_GAP +
   CALENDAR_WEEKDAY_ROW_HEIGHT +
   CALENDAR_ROW_GAP +
   CALENDAR_GRID_HEIGHT;
@@ -50,8 +50,10 @@ export function SimpleCalendar({
     const startPad = first.getDay();
     const daysInMonth = last.getDate();
     const cells: (number | null)[] = [];
+    // 월 시작 요일 전 빈 칸 채우기
     for (let i = 0; i < startPad; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    // 마지막 주 남은 칸 채우기 (6주 고정 그리드 유지)
     while (cells.length < CALENDAR_WEEKS * 7) cells.push(null);
     const rows: (number | null)[][] = [];
     for (let i = 0; i < CALENDAR_WEEKS * 7; i += 7) {
@@ -120,7 +122,7 @@ export function SimpleCalendar({
               return (
                 <TouchableOpacity
                   key={ci}
-                  style={[styles.dayCell, !selectable && styles.dayCellDisabled]}
+                  style={styles.dayCell}
                   onPress={() => {
                     if (day !== null && selectable) {
                       onSelectDate(dateStr(day));
@@ -202,7 +204,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  dayCellDisabled: {},
   dayCellInner: {
     width: 32,
     height: 32,

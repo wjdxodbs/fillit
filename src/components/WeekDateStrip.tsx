@@ -1,9 +1,7 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { theme } from "../theme";
-import { CELL_GAP, GRID_HORIZONTAL_PADDING } from "./gridConstants";
-
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+import { CELL_GAP, GRID_HORIZONTAL_PADDING, WEEKDAYS } from "./gridConstants";
 const COLUMNS = 7;
 const CELL_VERTICAL_PADDING = 8;
 

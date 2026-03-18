@@ -14,6 +14,28 @@ import {
   toDateStr,
 } from "../utils/dateUtils";
 
+type WidgetData = {
+  title: string;
+  baseDate: string;
+  targetDate: string;
+  filledUpTo: number;
+  totalDays: number;
+  clickUrl: string;
+};
+
+export function renderFillitWidget(data: WidgetData) {
+  return (
+    <FillitGrassWidget
+      title={data.title}
+      baseDate={data.baseDate}
+      targetDate={data.targetDate}
+      filledUpTo={data.filledUpTo}
+      totalDays={data.totalDays}
+      clickUrl={data.clickUrl}
+    />
+  );
+}
+
 /** 올해(1년) 기준 위젯 데이터 */
 export function getYearWidgetData() {
   const now = new Date();
@@ -83,16 +105,7 @@ export async function resetWidgetsForGoal(goalId: string): Promise<void> {
       requestWidgetUpdateById({
         widgetName: "FillitGrass",
         widgetId,
-        renderWidget: async () => (
-          <FillitGrassWidget
-            title={yearData.title}
-            baseDate={yearData.baseDate}
-            targetDate={yearData.targetDate}
-            filledUpTo={yearData.filledUpTo}
-            totalDays={yearData.totalDays}
-            clickUrl={yearData.clickUrl}
-          />
-        ),
+        renderWidget: async () => renderFillitWidget(yearData),
       }).catch(() => {})
     )
   );
@@ -118,16 +131,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
 
   const widgetData = await getWidgetDataForConfig(widgetInfo.widgetId);
 
-  const widget = (
-    <FillitGrassWidget
-      title={widgetData.title}
-      baseDate={widgetData.baseDate}
-      targetDate={widgetData.targetDate}
-      filledUpTo={widgetData.filledUpTo}
-      totalDays={widgetData.totalDays}
-      clickUrl={widgetData.clickUrl}
-    />
-  );
+  const widget = renderFillitWidget(widgetData);
 
   switch (widgetAction) {
     case "WIDGET_ADDED":

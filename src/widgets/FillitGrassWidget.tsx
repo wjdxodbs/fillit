@@ -1,6 +1,6 @@
 import React from "react";
 import { FlexWidget, SvgWidget, TextWidget } from "react-native-android-widget";
-import { formatDate } from "../utils/dateUtils";
+import { formatDate, calcProgress } from "../utils/dateUtils";
 import { theme } from "../theme";
 
 const GRASS_FILLED = theme.grassFilled;
@@ -39,12 +39,11 @@ export function FillitGrassWidget({
   const ROWS = Math.ceil(totalDays / COLS);
   const width = COLS * CELL_SIZE + (COLS - 1) * GAP;
   const height = ROWS * CELL_SIZE + (ROWS - 1) * GAP;
-  const progress =
-    totalDays > 0 ? Math.round((filledUpTo / totalDays) * 100) : 0;
+  const progress = calcProgress(filledUpTo, totalDays);
   const remaining = totalDays - filledUpTo;
 
   const rects = Array.from({ length: totalDays }, (_, i) => {
-    const dayIndex = i + 1;
+    const dayIndex = i + 1; // filledUpTo는 1-based이므로 변환
     const filled = dayIndex <= filledUpTo;
     const row = Math.floor(i / COLS);
     const col = i % COLS;

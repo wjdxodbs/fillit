@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { COLUMNS } from "./gridConstants";
+import { chunkArray } from "../utils/dateUtils";
 import { useCellSize } from "../hooks/useCellSize";
 import { GrassGrid } from "./GrassGrid";
 import type { CellState } from "./DayCell";
@@ -32,11 +33,7 @@ export function RangeGrassGrid({
       else if (filled && isLastCell && isCompleted) state = "highlight";
       cells.push(state);
     }
-    const rows: CellState[][] = [];
-    for (let i = 0; i < cells.length; i += COLUMNS) {
-      rows.push(cells.slice(i, i + COLUMNS));
-    }
-    return rows;
+    return chunkArray(cells, COLUMNS);
   }, [totalDays, elapsedDays, isCompleted]);
 
   return <GrassGrid rows={rows} cellSize={cellSize} />;

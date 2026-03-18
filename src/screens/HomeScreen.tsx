@@ -7,7 +7,7 @@ import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
 import { StatsCard } from "../components/StatsCard";
 import { theme } from "../theme";
-import { isLeapYear, getDayOfYear } from "../utils/dateUtils";
+import { isLeapYear, getDayOfYear, calcProgress } from "../utils/dateUtils";
 
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -23,7 +23,7 @@ export function HomeScreen() {
   const daysInYear = isLeapYear(year) ? 366 : 365;
   const elapsed = getDayOfYear(today);
   const remaining = daysInYear - elapsed;
-  const progress = Math.min(100, Math.round((elapsed / daysInYear) * 100));
+  const progress = Math.min(100, calcProgress(elapsed, daysInYear));
 
   return (
     <ScrollView
@@ -63,6 +63,6 @@ const styles = StyleSheet.create({
   },
   gridWrap: {
     width: "100%",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
 });

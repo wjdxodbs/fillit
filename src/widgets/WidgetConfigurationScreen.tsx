@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  type LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,11 +14,11 @@ import {
   requestWidgetUpdateById,
   type WidgetConfigurationScreenProps,
 } from "react-native-android-widget";
-import { FillitGrassWidget } from "./FillitGrassWidget";
 import {
   getSavedDateWidgetData,
   getWidgetDataForConfig,
   getYearWidgetData,
+  renderFillitWidget,
 } from "./widget-task-handler";
 import type { WidgetConfig } from "./widget-config";
 import { widgetConfigKey } from "./widget-config";
@@ -40,6 +41,11 @@ export function WidgetConfigurationScreen({
 
   const width = layoutWidth ?? effectiveWidth;
 
+  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width;
+    if (w >= MIN_VALID_WIDTH) setLayoutWidth(w);
+  }, []);
+
   const finishWith = useCallback(
     async (config: WidgetConfig) => {
       await AsyncStorage.setItem(
@@ -54,31 +60,13 @@ export function WidgetConfigurationScreen({
               config.baseDate,
               config.targetDate
             );
-      renderWidget(
-        <FillitGrassWidget
-          title={data.title}
-          baseDate={data.baseDate}
-          targetDate={data.targetDate}
-          filledUpTo={data.filledUpTo}
-          totalDays={data.totalDays}
-          clickUrl={data.clickUrl}
-        />
-      );
+      renderWidget(renderFillitWidget(data));
       await requestWidgetUpdateById({
         widgetName: "FillitGrass",
         widgetId: widgetInfo.widgetId,
         renderWidget: async (info) => {
           const widgetData = await getWidgetDataForConfig(info.widgetId);
-          return (
-            <FillitGrassWidget
-              title={widgetData.title}
-              baseDate={widgetData.baseDate}
-              targetDate={widgetData.targetDate}
-              filledUpTo={widgetData.filledUpTo}
-              totalDays={widgetData.totalDays}
-              clickUrl={widgetData.clickUrl}
-            />
-          );
+          return renderFillitWidget(widgetData);
         },
       });
       setResult("ok");
@@ -96,10 +84,7 @@ export function WidgetConfigurationScreen({
     return (
       <View
         style={containerStyle}
-        onLayout={(e) => {
-          const w = e.nativeEvent.layout.width;
-          if (w >= MIN_VALID_WIDTH) setLayoutWidth(w);
-        }}
+        onLayout={handleLayout}
       >
         <ActivityIndicator size="large" color={theme.grassFilled} />
       </View>

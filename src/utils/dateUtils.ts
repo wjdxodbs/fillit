@@ -43,6 +43,29 @@ export function getElapsedDays(
   return getDaysBetween(baseDate, todayStr);
 }
 
+/** 진행률(%) 계산. total이 0이면 0 반환 */
+export function calcProgress(filled: number, total: number): number {
+  return total > 0 ? Math.round((filled / total) * 100) : 0;
+}
+
+/** 배열을 size 단위로 분할 */
+export function chunkArray<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
+/** 두 Date가 같은 날(로컬 기준)인지 비교 */
+export function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 /** "YYYY-MM-DD" → "YYYY년 M월 D일" */
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
