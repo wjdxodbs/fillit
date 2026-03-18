@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WeekDateStrip } from "../components/WeekDateStrip";
 import { YearGrassGrid } from "../components/YearGrassGrid";
 import { YearMonthHeader } from "../components/YearMonthHeader";
@@ -9,6 +10,7 @@ import { theme } from "../theme";
 import { isLeapYear, getDayOfYear } from "../utils/dateUtils";
 
 export function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const [today, setToday] = useState(() => new Date());
   useFocusEffect(
     useCallback(() => {
@@ -26,7 +28,7 @@ export function HomeScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: 20 + insets.top }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerRow}>
@@ -50,7 +52,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 40,
   },
   headerRow: {
     flexDirection: "row",
