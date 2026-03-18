@@ -205,9 +205,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dayCellInner: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: MIN_DAY_CELL_WIDTH,
+    height: MIN_DAY_CELL_WIDTH,
+    borderRadius: MIN_DAY_CELL_WIDTH / 2,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -220,5 +220,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   dayTextDisabled: { color: theme.textSecondary, opacity: 0.4 },
-  dayTextSelected: { color: "#fff", fontWeight: "600" },
+  dayTextSelected: { color: theme.background, fontWeight: "600" },
 });

@@ -103,13 +103,13 @@ export function useGoalForm(
       } else {
         await add(title.trim(), baseDate, targetDate);
       }
-      closeModal();
+      setModalVisible(false);
     } catch {
       Alert.alert("저장 실패", "목표를 저장하지 못했습니다. 다시 시도해주세요.");
     } finally {
       setIsSaving(false);
     }
-  }, [title, baseDate, targetDate, editingId, add, update, closeModal]);
+  }, [title, baseDate, targetDate, editingId, add, update]);
 
   const openBasePicker = useCallback(() => {
     Keyboard.dismiss();

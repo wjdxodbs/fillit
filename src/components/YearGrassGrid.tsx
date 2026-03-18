@@ -34,7 +34,7 @@ export function YearGrassGrid({
       cells.push(state);
     }
     return chunkArray(cells, COLUMNS);
-  }, [year, endDate, endDayOfYear]);
+  }, [year, endDate]);
 
   return <GrassGrid rows={rows} cellSize={cellSize} />;
 }
