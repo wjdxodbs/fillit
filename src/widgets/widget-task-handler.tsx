@@ -1,5 +1,7 @@
-import { Linking } from "react-native";
+import React from "react";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { requestWidgetUpdateById } from "react-native-android-widget";
 import type { WidgetTaskHandlerProps } from "react-native-android-widget";
 import { FillitGrassWidget } from "./FillitGrassWidget";
 import type { WidgetConfig } from "./widget-config";
@@ -21,7 +23,8 @@ export function getYearWidgetData() {
   const totalDays = isLeapYear(year) ? 366 : 365;
   const filledUpTo = getDayOfYear(now);
   const title = `${year}년`;
-  return { title, baseDate, targetDate, filledUpTo, totalDays };
+  const clickUrl = "fillit://Home";
+  return { title, baseDate, targetDate, filledUpTo, totalDays, clickUrl };
 }
 
 /** 등록된 목표일(구간) 기준 위젯 데이터 */
@@ -32,7 +35,8 @@ export function getSavedDateWidgetData(
 ) {
   const totalDays = getDaysBetween(baseDate, targetDate);
   const filledUpTo = getElapsedDays(baseDate, targetDate, totalDays, toDateStr(new Date()));
-  return { title, baseDate, targetDate, filledUpTo, totalDays };
+  const clickUrl = `fillit://DateDetail?title=${encodeURIComponent(title)}&baseDate=${encodeURIComponent(baseDate)}&targetDate=${encodeURIComponent(targetDate)}`;
+  return { title, baseDate, targetDate, filledUpTo, totalDays, clickUrl };
 }
 
 async function readWidgetConfig(widgetId: number): Promise<WidgetConfig | null> {
@@ -45,12 +49,62 @@ async function readWidgetConfig(widgetId: number): Promise<WidgetConfig | null> 
   }
 }
 
+/**
+ * 삭제된 목표를 참조 중인 위젯을 연도 뷰로 초기화.
+ * Android에서는 앱이 위젯을 직접 삭제할 수 없으므로 연도 뷰로 전환한다.
+ */
+export async function resetWidgetsForGoal(goalId: string): Promise<void> {
+  if (Platform.OS !== "android") return;
+
+  const allKeys = await AsyncStorage.getAllKeys();
+  const widgetKeys = allKeys.filter((k) => k.startsWith("widget_config_"));
+
+  const resetIds: number[] = [];
+  for (const key of widgetKeys) {
+    const raw = await AsyncStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const config = JSON.parse(raw) as WidgetConfig;
+      if (config.mode !== "date" || config.id !== goalId) continue;
+      const widgetId = parseInt(key.replace("widget_config_", ""), 10);
+      if (isNaN(widgetId)) continue;
+      await AsyncStorage.setItem(key, JSON.stringify({ mode: "year" } as WidgetConfig));
+      resetIds.push(widgetId);
+    } catch {
+      // ignore
+    }
+  }
+
+  if (resetIds.length === 0) return;
+
+  const yearData = getYearWidgetData();
+  await Promise.all(
+    resetIds.map((widgetId) =>
+      requestWidgetUpdateById({
+        widgetName: "FillitGrass",
+        widgetId,
+        renderWidget: async () => (
+          <FillitGrassWidget
+            title={yearData.title}
+            baseDate={yearData.baseDate}
+            targetDate={yearData.targetDate}
+            filledUpTo={yearData.filledUpTo}
+            totalDays={yearData.totalDays}
+            clickUrl={yearData.clickUrl}
+          />
+        ),
+      }).catch(() => {})
+    )
+  );
+}
+
 export async function getWidgetDataForConfig(widgetId: number): Promise<{
   title: string;
   baseDate: string;
   targetDate: string;
   filledUpTo: number;
   totalDays: number;
+  clickUrl: string;
 }> {
   const config = await readWidgetConfig(widgetId);
   if (!config || config.mode === "year") return getYearWidgetData();
@@ -71,6 +125,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
       targetDate={widgetData.targetDate}
       filledUpTo={widgetData.filledUpTo}
       totalDays={widgetData.totalDays}
+      clickUrl={widgetData.clickUrl}
     />
   );
 
@@ -80,16 +135,6 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case "WIDGET_RESIZED":
       renderWidget(widget);
       break;
-    case "WIDGET_CLICK": {
-      const config = await readWidgetConfig(widgetInfo.widgetId);
-      if (config?.mode === "date") {
-        const url = `fillit://DateDetail?title=${encodeURIComponent(config.title)}&baseDate=${config.baseDate}&targetDate=${config.targetDate}`;
-        Linking.openURL(url);
-      } else {
-        Linking.openURL("fillit://Home");
-      }
-      break;
-    }
     default:
       break;
   }

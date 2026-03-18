@@ -36,6 +36,32 @@ function withFillitManifest(config) {
     }
     manifest.manifest["uses-permission"] = perms;
 
+    // MainActivity에 fillit:// 딥링크 intent-filter 추가
+    const application = manifest.manifest.application?.[0];
+    if (application) {
+      const activities = application.activity || [];
+      const mainActivity = Array.isArray(activities)
+        ? activities.find((a) => a.$?.["android:name"] === ".MainActivity")
+        : null;
+      if (mainActivity) {
+        const filters = mainActivity["intent-filter"] || [];
+        const hasDeepLink = filters.some((f) =>
+          (f.data || []).some((d) => d.$?.["android:scheme"] === "fillit")
+        );
+        if (!hasDeepLink) {
+          filters.push({
+            action: [{ $: { "android:name": "android.intent.action.VIEW" } }],
+            category: [
+              { $: { "android:name": "android.intent.category.DEFAULT" } },
+              { $: { "android:name": "android.intent.category.BROWSABLE" } },
+            ],
+            data: [{ $: { "android:scheme": "fillit" } }],
+          });
+          mainActivity["intent-filter"] = filters;
+        }
+      }
+    }
+
     // application에 receiver 추가 (이미 있으면 스킵)
     const applications = manifest.manifest.application;
     if (Array.isArray(applications) && applications.length > 0) {

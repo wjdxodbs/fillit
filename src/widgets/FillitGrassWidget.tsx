@@ -20,6 +20,8 @@ export interface FillitGrassWidgetProps {
   filledUpTo: number;
   /** 구간 총 일수 (올해면 365/366, 목표일이면 base~target 일수) */
   totalDays: number;
+  /** 클릭 시 이동할 딥링크 URL */
+  clickUrl: string;
 }
 
 
@@ -32,6 +34,7 @@ export function FillitGrassWidget({
   targetDate,
   filledUpTo,
   totalDays,
+  clickUrl,
 }: FillitGrassWidgetProps) {
   const ROWS = Math.ceil(totalDays / COLS);
   const width = COLS * CELL_SIZE + (COLS - 1) * GAP;
@@ -58,7 +61,8 @@ export function FillitGrassWidget({
 
   return (
     <FlexWidget
-      clickAction="WIDGET_CLICK"
+      clickAction="OPEN_URI"
+      clickActionData={{ uri: clickUrl }}
       style={{
         flexDirection: "column",
         padding: 12,
@@ -161,14 +165,14 @@ export function FillitGrassWidget({
         >
           <FlexWidget
             style={{
-              flex: progress,
+              flex: Math.max(0.001, progress),
               height: "match_parent",
               backgroundColor: GRASS_FILLED,
             }}
           />
           <FlexWidget
             style={{
-              flex: Math.max(1, 100 - progress),
+              flex: Math.max(0.001, 100 - progress),
               height: "match_parent",
               backgroundColor: GRASS_EMPTY,
             }}

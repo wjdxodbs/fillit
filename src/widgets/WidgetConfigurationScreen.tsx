@@ -61,6 +61,7 @@ export function WidgetConfigurationScreen({
           targetDate={data.targetDate}
           filledUpTo={data.filledUpTo}
           totalDays={data.totalDays}
+          clickUrl={data.clickUrl}
         />
       );
       await requestWidgetUpdateById({
@@ -75,6 +76,7 @@ export function WidgetConfigurationScreen({
               targetDate={widgetData.targetDate}
               filledUpTo={widgetData.filledUpTo}
               totalDays={widgetData.totalDays}
+              clickUrl={widgetData.clickUrl}
             />
           );
         },
