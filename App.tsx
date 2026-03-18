@@ -12,8 +12,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { theme } from "./src/theme";
-import { FillitGrassWidget } from "./src/widgets/FillitGrassWidget";
-import { getWidgetDataForConfig } from "./src/widgets/widget-task-handler";
+import { getWidgetDataForConfig, renderFillitWidget } from "./src/widgets/widget-task-handler";
+
+const TAB_BAR_STYLE = {
+  backgroundColor: "transparent",
+  borderTopWidth: 0,
+  height: 64,
+  paddingBottom: 0,
+} as const;
 
 const AppTheme = {
   ...DefaultTheme,
@@ -42,9 +48,17 @@ const linking: LinkingOptions<RootTabParamList> = {
     screens: {
       Home: "Home",
       Dates: {
+        initialRouteName: "DatesList",
         screens: {
           DatesList: "DatesList",
-          DateDetail: "DateDetail",
+          DateDetail: {
+            path: "DateDetail",
+            parse: {
+              title: String,
+              baseDate: String,
+              targetDate: String,
+            },
+          },
         },
       },
     },
@@ -65,16 +79,7 @@ export default function App() {
         widgetName: "FillitGrass",
         renderWidget: async (widgetInfo) => {
           const data = await getWidgetDataForConfig(widgetInfo.widgetId);
-          return (
-            <FillitGrassWidget
-              title={data.title}
-              baseDate={data.baseDate}
-              targetDate={data.targetDate}
-              filledUpTo={data.filledUpTo}
-              totalDays={data.totalDays}
-              clickUrl={data.clickUrl}
-            />
-          );
+          return renderFillitWidget(data);
         },
       }).catch(() => {
         // 위젯이 없으면 무시
@@ -90,12 +95,7 @@ export default function App() {
           <Tab.Navigator
             screenOptions={{
               headerShown: false,
-              tabBarStyle: {
-                backgroundColor: "transparent",
-                borderTopWidth: 0,
-                height: 64,
-                paddingBottom: 0,
-              },
+              tabBarStyle: TAB_BAR_STYLE,
               tabBarItemStyle: {
                 justifyContent: "center",
                 paddingVertical: 0,
@@ -161,12 +161,7 @@ export default function App() {
                 ),
                 tabBarStyle: getFocusedRouteNameFromRoute(route) === "DateDetail"
                   ? { display: "none" }
-                  : {
-                      backgroundColor: "transparent",
-                      borderTopWidth: 0,
-                      height: 64,
-                      paddingBottom: 0,
-                    },
+                  : TAB_BAR_STYLE,
               })}
             />
           </Tab.Navigator>
