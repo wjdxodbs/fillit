@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Keyboard } from "react-native";
+import { Alert, Keyboard } from "react-native";
 import { toDateStr } from "../utils/dateUtils";
 
 export function useGoalForm(
@@ -17,6 +17,7 @@ export function useGoalForm(
   );
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [baseDate, setBaseDate] = useState("");
   const [targetDate, setTargetDate] = useState("");
@@ -46,8 +47,9 @@ export function useGoalForm(
   }, []);
 
   const closeModal = useCallback(() => {
+    if (isSaving) return;
     setModalVisible(false);
-  }, []);
+  }, [isSaving]);
 
   const goPrevMonth = useCallback(() => {
     if (viewMonth === 0) {
@@ -69,9 +71,19 @@ export function useGoalForm(
 
   const save = useCallback(async () => {
     if (!title.trim() || !baseDate.trim() || !targetDate.trim()) return;
-    if (baseDate > targetDate) return;
-    await add(title.trim(), baseDate, targetDate);
-    closeModal();
+    if (baseDate > targetDate) {
+      Alert.alert("날짜 오류", "목표 날짜는 기준 날짜 이후여야 합니다.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await add(title.trim(), baseDate, targetDate);
+      closeModal();
+    } catch {
+      Alert.alert("저장 실패", "목표를 저장하지 못했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSaving(false);
+    }
   }, [title, baseDate, targetDate, add, closeModal]);
 
   const openBasePicker = useCallback(() => {
@@ -129,7 +141,10 @@ export function useGoalForm(
       : oneYearLater;
   const calendarSelectedDate = showDatePicker === "base" ? baseDate : targetDate;
 
-  const canSave = title.trim().length > 0 && targetDate.length > 0;
+  const canSave =
+    title.trim().length > 0 &&
+    targetDate.length > 0 &&
+    baseDate <= targetDate;
 
   return {
     modalVisible,
@@ -138,6 +153,7 @@ export function useGoalForm(
     baseDate,
     targetDate,
     canSave,
+    isSaving,
     showDatePicker,
     viewYear,
     viewMonth,
