@@ -2,7 +2,8 @@ import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../stores/themeStore";
 import { type Theme } from "../theme";
-import { WEEKDAYS } from "./gridConstants";
+import { WEEKDAYS } from "../constants/gridConstants";
+import { useCalendarGrid } from "../hooks/useCalendarGrid";
 
 const CALENDAR_WEEKS = 6;
 const CALENDAR_ROW_HEIGHT = 36;
@@ -114,66 +115,25 @@ export const SimpleCalendar = React.memo(function SimpleCalendar({
 }: SimpleCalendarProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-
-  const weeks = useMemo(() => {
-    const first = new Date(year, month, 1);
-    const last = new Date(year, month + 1, 0);
-    const startPad = first.getDay();
-    const daysInMonth = last.getDate();
-    const cells: (number | null)[] = [];
-    // 월 시작 요일 전 빈 칸 채우기
-    for (let i = 0; i < startPad; i++) cells.push(null);
-    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-    // 마지막 주 남은 칸 채우기 (6주 고정 그리드 유지)
-    while (cells.length < CALENDAR_WEEKS * 7) cells.push(null);
-    const rows: (number | null)[][] = [];
-    for (let i = 0; i < CALENDAR_WEEKS * 7; i += 7) {
-      rows.push(cells.slice(i, i + 7));
-    }
-    return rows;
-  }, [year, month]);
-
-  const dateStr = (day: number) => {
-    const m = String(month + 1).padStart(2, "0");
-    const d = String(day).padStart(2, "0");
-    return `${year}-${m}-${d}`;
-  };
-
-  const isSelectable = (day: number | null) => {
-    if (day === null) return false;
-    const d = new Date(year, month, day);
-    d.setHours(0, 0, 0, 0);
-    const t = d.getTime();
-    if (t < minimumDate.getTime()) return false;
-    if (maximumDate && t > maximumDate.getTime()) return false;
-    return true;
-  };
-
-  const isSelected = (day: number | null) => day !== null && selectedDate === dateStr(day);
+  const { weeks, dateStr, isSelectable, isSelected } = useCalendarGrid(
+    year,
+    month,
+    minimumDate,
+    maximumDate,
+    selectedDate
+  );
 
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={onPrevMonth}
-          disabled={!canGoPrev}
-          style={styles.navBtn}
-        >
-          <Text style={[styles.navText, !canGoPrev && styles.navDisabled]}>
-            ‹
-          </Text>
+        <TouchableOpacity onPress={onPrevMonth} disabled={!canGoPrev} style={styles.navBtn}>
+          <Text style={[styles.navText, !canGoPrev && styles.navDisabled]}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.monthTitle}>
           {year}년 {month + 1}월
         </Text>
-        <TouchableOpacity
-          onPress={onNextMonth}
-          disabled={!canGoNext}
-          style={styles.navBtn}
-        >
-          <Text style={[styles.navText, !canGoNext && styles.navDisabled]}>
-            ›
-          </Text>
+        <TouchableOpacity onPress={onNextMonth} disabled={!canGoNext} style={styles.navBtn}>
+          <Text style={[styles.navText, !canGoNext && styles.navDisabled]}>›</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.weekdayRow}>
@@ -194,18 +154,11 @@ export const SimpleCalendar = React.memo(function SimpleCalendar({
                   key={ci}
                   style={styles.dayCell}
                   onPress={() => {
-                    if (day !== null && selectable) {
-                      onSelectDate(dateStr(day));
-                    }
+                    if (day !== null && selectable) onSelectDate(dateStr(day));
                   }}
                   disabled={!selectable}
                 >
-                  <View
-                    style={[
-                      styles.dayCellInner,
-                      selected && styles.dayCellInnerSelected,
-                    ]}
-                  >
+                  <View style={[styles.dayCellInner, selected && styles.dayCellInnerSelected]}>
                     <Text
                       style={[
                         styles.dayText,
