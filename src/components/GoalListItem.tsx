@@ -1,7 +1,5 @@
 import React, { useMemo } from "react";
 import {
-  Animated,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -13,8 +11,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../stores/themeStore";
 import { type Theme } from "../theme";
 import type { SavedDate } from "../types";
-import { getDaysBetween, getElapsedDays, formatDate, calcProgress } from "../utils/dateUtils";
+import { formatDateRange } from "../utils/dateUtils";
 import { useBottomSheet } from "../hooks/useBottomSheet";
+import { useGoalProgress } from "../hooks/useGoalProgress";
+import { GoalItemMenu } from "./GoalItemMenu";
 
 const PROGRESS_GRADIENT_COLORS = ["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"] as const;
 const COMPLETED_BADGE_BG = "rgba(0,196,154,0.15)";
@@ -98,84 +98,30 @@ const createStyles = (theme: Theme) =>
       fontWeight: "600",
       color: theme.grassFilled,
     },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    sheet: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: theme.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingHorizontal: 20,
-      paddingBottom: 32,
-      paddingTop: 12,
-    },
-    sheetHandle: {
-      width: 36,
-      height: 4,
-      backgroundColor: theme.border,
-      borderRadius: 2,
-      alignSelf: "center",
-      marginBottom: 16,
-    },
-    sheetTitle: {
-      fontSize: 18,
-      fontWeight: "700",
-      color: theme.text,
-      marginBottom: 16,
-    },
-    sheetAction: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-      paddingVertical: 14,
-    },
-    sheetDivider: {
-      height: 1,
-      backgroundColor: theme.border,
-    },
-    sheetActionEdit: {
-      fontSize: 16,
-      color: theme.text,
-      fontWeight: "500",
-    },
-    sheetActionDelete: {
-      fontSize: 16,
-      color: theme.danger,
-      fontWeight: "500",
-    },
   });
 
-export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, onPress, onEdit, onDelete }: GoalListItemProps) {
+export const GoalListItem = React.memo(function GoalListItem({
+  item,
+  todayStr,
+  onPress,
+  onEdit,
+  onDelete,
+}: GoalListItemProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { visible: menuVisible, setVisible: setMenuVisible, close: closeSheet, backdropOpacity, sheetTranslateY } = useBottomSheet();
-
-  const totalDays = getDaysBetween(item.baseDate, item.targetDate);
-  const elapsedDays = getElapsedDays(item.baseDate, item.targetDate, totalDays, todayStr);
-  const isCompleted = todayStr > item.targetDate;
-  const progressPercent = calcProgress(elapsedDays, totalDays);
-
-  const handlePress = () => onPress(item);
-  const handleEdit = () => onEdit(item);
-  const handleDelete = () => onDelete(item);
+  const { visible: menuVisible, setVisible: setMenuVisible, close: closeSheet, backdropOpacity, sheetTranslateY } =
+    useBottomSheet();
+  const { isCompleted, progressPercent } = useGoalProgress(item.baseDate, item.targetDate, todayStr);
 
   return (
     <>
-      <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={handlePress}>
+      <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={() => onPress(item)}>
         <View style={styles.itemProgressBgWrap}>
           <LinearGradient
             colors={PROGRESS_GRADIENT_COLORS}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={[
-              styles.itemProgressBg,
-              { width: `${Math.min(100, progressPercent)}%` },
-            ]}
+            style={[styles.itemProgressBg, { width: `${Math.min(100, progressPercent)}%` }]}
           />
         </View>
         <View style={styles.itemContent}>
@@ -190,8 +136,7 @@ export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, o
             )}
           </View>
           <Text style={styles.itemDate}>
-            {formatDate(item.baseDate)} ~{" "}
-            {formatDate(item.targetDate)}
+            {formatDateRange(item.baseDate, item.targetDate)}
           </Text>
         </View>
         <TouchableOpacity
@@ -206,34 +151,15 @@ export const GoalListItem = React.memo(function GoalListItem({ item, todayStr, o
         </TouchableOpacity>
       </Pressable>
 
-      <Modal
+      <GoalItemMenu
+        title={item.title}
         visible={menuVisible}
-        transparent
-        animationType="none"
-        onRequestClose={() => closeSheet()}
-        statusBarTranslucent
-      >
-        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => closeSheet()} />
-        </Animated.View>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetTranslateY }] }]}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle} numberOfLines={1}>{item.title}</Text>
-          <TouchableOpacity
-            style={styles.sheetAction}
-            onPress={() => closeSheet(handleEdit)}
-          >
-            <Text style={styles.sheetActionEdit}>수정</Text>
-          </TouchableOpacity>
-          <View style={styles.sheetDivider} />
-          <TouchableOpacity
-            style={styles.sheetAction}
-            onPress={() => closeSheet(handleDelete)}
-          >
-            <Text style={styles.sheetActionDelete}>삭제</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </Modal>
+        backdropOpacity={backdropOpacity}
+        sheetTranslateY={sheetTranslateY}
+        onClose={() => closeSheet()}
+        onEdit={() => closeSheet(() => onEdit(item))}
+        onDelete={() => closeSheet(() => onDelete(item))}
+      />
     </>
   );
 });
