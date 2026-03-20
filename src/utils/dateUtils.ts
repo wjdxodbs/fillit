@@ -66,14 +66,24 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
+/** year, month(0-indexed), day → "YYYY-MM-DD" */
+export function formatDateComponents(year: number, month: number, day: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** "YYYY-MM-DD", "YYYY-MM-DD" → "YYYY년 M월 D일 ~ YYYY년 M월 D일" */
+export function formatDateRange(baseDate: string, targetDate: string): string {
+  return `${formatDate(baseDate)} ~ ${formatDate(targetDate)}`;
+}
+
 /** "YYYY-MM-DD" → "YYYY년 M월 D일" */
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
-/** "YYYY-MM-DD" → { year, month(0-indexed) } */
-export function parseDateStr(dateStr: string): { year: number; month: number } {
-  const [y, m] = dateStr.split("-").map(Number);
-  return { year: y, month: m - 1 };
+/** "YYYY-MM-DD" → { year, month(0-indexed), day } */
+export function parseDateStr(dateStr: string): { year: number; month: number; day: number } {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return { year: y, month: m - 1, day: d };
 }

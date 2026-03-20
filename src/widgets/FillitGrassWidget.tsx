@@ -1,8 +1,8 @@
 import React from "react";
 import { FlexWidget, SvgWidget, TextWidget } from "react-native-android-widget";
-import { formatDate, calcProgress } from "../utils/dateUtils";
+import { formatDateRange, calcProgress } from "../utils/dateUtils";
 import { darkTheme as theme } from "../theme";
-import { COLUMNS } from "../components/gridConstants";
+import { COLUMNS } from "../constants/gridConstants";
 
 const GRASS_FILLED = theme.grassFilled;
 const GRASS_EMPTY = theme.grassEmpty;
@@ -90,7 +90,7 @@ export function FillitGrassWidget({
       >
         {/* 날짜 범위 */}
         <TextWidget
-          text={`${formatDate(baseDate)} ~ ${formatDate(targetDate)}`}
+          text={formatDateRange(baseDate, targetDate)}
           style={{
             color: theme.textSecondary,
             fontSize: 14,

@@ -6,13 +6,10 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import { RangeGrassGrid } from "../components/RangeGrassGrid";
 import { StatsCard } from "../components/StatsCard";
+import { ScreenSeparator } from "../components/ScreenSeparator";
 import { type Theme } from "../theme";
-import {
-  getDaysBetween,
-  getElapsedDays,
-  formatDate,
-  calcProgress,
-} from "../utils/dateUtils";
+import { formatDateRange } from "../utils/dateUtils";
+import { useGoalProgress } from "../hooks/useGoalProgress";
 
 type Props = NativeStackScreenProps<DatesStackParamList, "DateDetail">;
 
@@ -21,10 +18,6 @@ const createStyles = (theme: Theme) =>
     container: {
       flex: 1,
       backgroundColor: theme.background,
-    },
-    separator: {
-      height: 1,
-      backgroundColor: theme.border,
     },
     scroll: {
       flex: 1,
@@ -43,30 +36,27 @@ export function DateDetailScreen({ route }: Props) {
   const { baseDate, targetDate } = route.params;
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const totalBlocks = getDaysBetween(baseDate, targetDate);
   const todayStr = useTodayStr();
-  const isCompleted = todayStr > targetDate;
-  const elapsedDays = getElapsedDays(baseDate, targetDate, totalBlocks, todayStr);
-  const progress = calcProgress(elapsedDays, totalBlocks);
-  const remainingDays = totalBlocks - elapsedDays;
+  const { totalDays, elapsedDays, isCompleted, progressPercent } = useGoalProgress(baseDate, targetDate, todayStr);
+  const remainingDays = totalDays - elapsedDays;
 
   return (
     <View style={styles.container}>
-      <View style={styles.separator} />
+      <ScreenSeparator />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <StatsCard
-          progress={progress}
+          progress={progressPercent}
           elapsed={elapsedDays}
           remaining={remainingDays}
-          subtitle={`${formatDate(baseDate)} ~ ${formatDate(targetDate)}`}
+          subtitle={formatDateRange(baseDate, targetDate)}
         />
         <View style={styles.gridWrap}>
           <RangeGrassGrid
-            totalDays={totalBlocks}
+            totalDays={totalDays}
             elapsedDays={elapsedDays}
             isCompleted={isCompleted}
           />
