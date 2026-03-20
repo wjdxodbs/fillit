@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -10,22 +9,12 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import {
-  requestWidgetUpdateById,
-  type WidgetConfigurationScreenProps,
-} from "react-native-android-widget";
-import {
-  getSavedDateWidgetData,
-  getWidgetDataForConfig,
-  getYearWidgetData,
-  renderFillitWidget,
-} from "./widget-task-handler";
-import type { WidgetConfig } from "./widget-config";
-import { widgetConfigKey } from "./widget-config";
+import { type WidgetConfigurationScreenProps } from "react-native-android-widget";
 import type { SavedDate } from "../types";
 import { useSavedDates } from "../hooks/useSavedDates";
-import { formatDate } from "../utils/dateUtils";
+import { formatDateRange } from "../utils/dateUtils";
 import { darkTheme as theme } from "../theme";
+import { useWidgetConfiguration } from "./useWidgetConfiguration";
 
 const MIN_VALID_WIDTH = 200;
 
@@ -38,6 +27,7 @@ export function WidgetConfigurationScreen({
   const effectiveWidth = windowWidth >= MIN_VALID_WIDTH ? windowWidth : 360;
   const [layoutWidth, setLayoutWidth] = useState<number | null>(null);
   const { dates: savedDates, loading } = useSavedDates();
+  const { finishWith } = useWidgetConfiguration({ widgetInfo, renderWidget, setResult });
 
   const width = layoutWidth ?? effectiveWidth;
 
@@ -46,53 +36,21 @@ export function WidgetConfigurationScreen({
     if (w >= MIN_VALID_WIDTH) setLayoutWidth(w);
   };
 
-  const finishWith = async (config: WidgetConfig) => {
-    await AsyncStorage.setItem(
-      widgetConfigKey(widgetInfo.widgetId),
-      JSON.stringify(config)
-    );
-    const data =
-      config.mode === "year"
-        ? getYearWidgetData()
-        : getSavedDateWidgetData(
-            config.title,
-            config.baseDate,
-            config.targetDate
-          );
-    renderWidget(renderFillitWidget(data));
-    await requestWidgetUpdateById({
-      widgetName: "FillitGrass",
-      widgetId: widgetInfo.widgetId,
-      renderWidget: async (info) => {
-        const widgetData = await getWidgetDataForConfig(info.widgetId);
-        return renderFillitWidget(widgetData);
-      },
-    });
-    setResult("ok");
-  };
-
   const year = new Date().getFullYear();
   const yearTitle = `${year}년`;
   const yearSubtitle = `${year}년 1월 1일 ~ ${year}년 12월 31일`;
-
   const containerStyle = [styles.container, { width, maxWidth: width }];
 
   if (loading) {
     return (
-      <View
-        style={containerStyle}
-        onLayout={handleLayout}
-      >
+      <View style={containerStyle} onLayout={handleLayout}>
         <ActivityIndicator size="large" color={theme.grassFilled} />
       </View>
     );
   }
 
   return (
-    <View
-      style={containerStyle}
-      onLayout={handleLayout}
-    >
+    <View style={containerStyle} onLayout={handleLayout}>
       <ScrollView
         style={[styles.scroll, { width }]}
         contentContainerStyle={[styles.scrollContent, { width: width - 40 }]}
@@ -131,7 +89,7 @@ export function WidgetConfigurationScreen({
             >
               <Text style={styles.optionTitle}>{item.title}</Text>
               <Text style={styles.optionSubtitle}>
-                {formatDate(item.baseDate)} ~ {formatDate(item.targetDate)}
+                {formatDateRange(item.baseDate, item.targetDate)}
               </Text>
             </TouchableOpacity>
           ))
