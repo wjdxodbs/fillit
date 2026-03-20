@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import { COLUMNS, CELL_GAP, GRID_HORIZONTAL_PADDING } from "../components/gridConstants";
+import { COLUMNS, CELL_GAP, GRID_HORIZONTAL_PADDING } from "../constants/gridConstants";
 
 export function useCellSize(cellSizeProp?: number): number {
   const { width } = useWindowDimensions();

@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { DayCell } from "./DayCell";
 import type { CellState } from "./DayCell";
-import { CELL_GAP } from "./gridConstants";
+import { CELL_GAP } from "../constants/gridConstants";
 
 interface GrassGridProps {
   rows: CellState[][];

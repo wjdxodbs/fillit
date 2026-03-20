@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { COLUMNS, resolveCellState } from "./gridConstants";
+import { COLUMNS, resolveCellState } from "../constants/gridConstants";
 import { chunkArray } from "../utils/dateUtils";
 import type { CellState } from "./DayCell";
 import { useCellSize } from "../hooks/useCellSize";
