@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
-import { useTheme } from "../stores/themeStore";
-import type { Theme } from "../theme";
+import { useTheme } from "../../stores/themeStore";
+import type { Theme } from "../../theme";
 
 function SkeletonItem({ opacity, theme }: { opacity: Animated.Value; theme: Theme }) {
   const styles = useMemo(

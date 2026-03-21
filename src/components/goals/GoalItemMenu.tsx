@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Animated } from "react-native";
-import { useTheme } from "../stores/themeStore";
-import type { Theme } from "../theme";
-import { BottomSheet } from "./BottomSheet";
+import { useTheme } from "../../stores/themeStore";
+import type { Theme } from "../../theme";
+import { BottomSheet } from "../common/BottomSheet";
 
 interface Props {
   title: string;

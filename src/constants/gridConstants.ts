@@ -1,4 +1,4 @@
-import type { CellState } from "../components/DayCell";
+import type { CellState } from "../components/common/DayCell";
 
 /** 잔디 그리드 열 수 */
 export const COLUMNS = 16;

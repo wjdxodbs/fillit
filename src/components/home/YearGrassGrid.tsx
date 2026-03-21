@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
-import { isLeapYear, getDayOfYear, isSameDay, chunkArray } from "../utils/dateUtils";
-import { COLUMNS, resolveCellState } from "../constants/gridConstants";
-import type { CellState } from "./DayCell";
-import { useCellSize } from "../hooks/useCellSize";
-import { GrassGrid } from "./GrassGrid";
+import { isLeapYear, getDayOfYear, isSameDay, chunkArray } from "../../utils/dateUtils";
+import { COLUMNS, resolveCellState } from "../../constants/gridConstants";
+import type { CellState } from "../common/DayCell";
+import { useCellSize } from "../../hooks/useCellSize";
+import { GrassGrid } from "../common/GrassGrid";
 
 
 interface YearGrassGridProps {

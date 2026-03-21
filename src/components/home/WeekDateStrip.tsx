@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { useTheme } from "../stores/themeStore";
-import { type Theme } from "../theme";
-import { CELL_GAP, GRID_HORIZONTAL_PADDING, WEEKDAYS } from "../constants/gridConstants";
+import { useTheme } from "../../stores/themeStore";
+import { type Theme } from "../../theme";
+import { CELL_GAP, GRID_HORIZONTAL_PADDING, WEEKDAYS } from "../../constants/gridConstants";
 
 const COLUMNS = 7;
 const CELL_VERTICAL_PADDING = 8;

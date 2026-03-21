@@ -8,12 +8,12 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../stores/themeStore";
-import { type Theme } from "../theme";
-import type { SavedDate } from "../types";
-import { formatDateRange } from "../utils/dateUtils";
-import { useBottomSheet } from "../hooks/useBottomSheet";
-import { useGoalProgress } from "../hooks/useGoalProgress";
+import { useTheme } from "../../stores/themeStore";
+import { type Theme } from "../../theme";
+import type { SavedDate } from "../../types";
+import { formatDateRange } from "../../utils/dateUtils";
+import { useBottomSheet } from "../../hooks/useBottomSheet";
+import { useGoalProgress } from "../../hooks/goals/useGoalProgress";
 import { GoalItemMenu } from "./GoalItemMenu";
 
 const PROGRESS_GRADIENT_COLORS = ["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"] as const;

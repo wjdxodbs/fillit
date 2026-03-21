@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { formatDateComponents } from "../utils/dateUtils";
+import { formatDateComponents } from "../../utils/dateUtils";
 
 const CALENDAR_WEEKS = 6;
 

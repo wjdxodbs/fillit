@@ -4,12 +4,12 @@ import { useTodayStr } from "../hooks/useTodayStr";
 import { useTheme } from "../stores/themeStore";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { DatesStackParamList } from "../navigation/DatesStackScreen";
-import { RangeGrassGrid } from "../components/RangeGrassGrid";
-import { StatsCard } from "../components/StatsCard";
-import { ScreenSeparator } from "../components/ScreenSeparator";
+import { RangeGrassGrid } from "../components/goals/RangeGrassGrid";
+import { StatsCard } from "../components/common/StatsCard";
+import { ScreenSeparator } from "../components/common/ScreenSeparator";
 import { type Theme } from "../theme";
 import { formatDateRange } from "../utils/dateUtils";
-import { useGoalProgress } from "../hooks/useGoalProgress";
+import { useGoalProgress } from "../hooks/goals/useGoalProgress";
 
 type Props = NativeStackScreenProps<DatesStackParamList, "DateDetail">;
 

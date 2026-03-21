@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme, type ThemeMode } from "../stores/themeStore";
 import { useBottomSheet } from "../hooks/useBottomSheet";
-import { BottomSheet } from "./BottomSheet";
+import { BottomSheet } from "./common/BottomSheet";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 

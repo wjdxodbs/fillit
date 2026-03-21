@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
-import { COLUMNS, resolveCellState } from "../constants/gridConstants";
-import { chunkArray } from "../utils/dateUtils";
-import type { CellState } from "./DayCell";
-import { useCellSize } from "../hooks/useCellSize";
-import { GrassGrid } from "./GrassGrid";
+import { COLUMNS, resolveCellState } from "../../constants/gridConstants";
+import { chunkArray } from "../../utils/dateUtils";
+import type { CellState } from "../common/DayCell";
+import { useCellSize } from "../../hooks/useCellSize";
+import { GrassGrid } from "../common/GrassGrid";
 
 interface RangeGrassGridProps {
   totalDays: number;
@@ -26,8 +26,7 @@ export function RangeGrassGrid({
     for (let i = 0; i < totalDays; i++) {
       const filled = i < elapsedDays;
       const isTodayCell = i === elapsedDays - 1 && elapsedDays > 0 && !isCompleted;
-      const isHighlight = i === totalDays - 1 && isCompleted;
-      cells.push(resolveCellState(filled, isTodayCell, isHighlight));
+      cells.push(resolveCellState(filled, isTodayCell, false));
     }
     return chunkArray(cells, COLUMNS);
   }, [totalDays, elapsedDays, isCompleted]);

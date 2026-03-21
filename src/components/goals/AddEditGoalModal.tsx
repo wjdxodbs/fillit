@@ -12,10 +12,10 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../stores/themeStore";
+import { useTheme } from "../../stores/themeStore";
 import { SimpleCalendar } from "./SimpleCalendar";
-import { formatDate } from "../utils/dateUtils";
-import type { Theme } from "../theme";
+import { formatDate } from "../../utils/dateUtils";
+import type { Theme } from "../../theme";
 
 interface Props {
   modalVisible: boolean;

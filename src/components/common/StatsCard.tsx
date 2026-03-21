@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useTheme } from "../stores/themeStore";
-import { type Theme } from "../theme";
+import { useTheme } from "../../stores/themeStore";
+import { type Theme } from "../../theme";
 
 interface StatsCardProps {
   progress: number;

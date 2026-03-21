@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { getDaysBetween, getElapsedDays, calcProgress } from "../utils/dateUtils";
+import { getDaysBetween, getElapsedDays, calcProgress } from "../../utils/dateUtils";
 
 export function useGoalProgress(baseDate: string, targetDate: string, todayStr: string) {
   return useMemo(() => {

@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "../stores/themeStore";
-import { type Theme } from "../theme";
-import { WEEKDAYS } from "../constants/gridConstants";
-import { useCalendarGrid } from "../hooks/useCalendarGrid";
+import { useTheme } from "../../stores/themeStore";
+import { type Theme } from "../../theme";
+import { WEEKDAYS } from "../../constants/gridConstants";
+import { useCalendarGrid } from "../../hooks/goals/useCalendarGrid";
 
 const CALENDAR_WEEKS = 6;
 const CALENDAR_ROW_HEIGHT = 36;

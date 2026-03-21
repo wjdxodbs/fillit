@@ -5,14 +5,14 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTodayStr } from "../hooks/useTodayStr";
 import { useTheme } from "../stores/themeStore";
 import { useSavedDates } from "../hooks/useSavedDates";
-import { useGoalForm } from "../hooks/useGoalForm";
+import { useGoalForm } from "../hooks/goals/useGoalForm";
 import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import type { SavedDate } from "../types";
 import type { Theme } from "../theme";
-import { GoalListItem } from "../components/GoalListItem";
-import { SkeletonGoalList } from "../components/SkeletonGoalList";
-import { AddEditGoalModal } from "../components/AddEditGoalModal";
-import { ScreenSeparator } from "../components/ScreenSeparator";
+import { GoalListItem } from "../components/goals/GoalListItem";
+import { SkeletonGoalList } from "../components/goals/SkeletonGoalList";
+import { AddEditGoalModal } from "../components/goals/AddEditGoalModal";
+import { ScreenSeparator } from "../components/common/ScreenSeparator";
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
