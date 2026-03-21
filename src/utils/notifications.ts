@@ -1,7 +1,10 @@
-import { Platform } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import type { SavedDate } from "../types";
 import { parseDateStr } from "./dateUtils";
+
+const EXACT_ALARM_ASKED_KEY = "exact_alarm_permission_asked";
 
 export async function setupNotificationChannel() {
   Notifications.setNotificationHandler({
@@ -25,6 +28,31 @@ export async function setupNotificationChannel() {
 export async function requestNotificationPermission(): Promise<boolean> {
   const { status } = await Notifications.requestPermissionsAsync();
   return status === "granted";
+}
+
+export async function requestExactAlarmPermissionIfNeeded(): Promise<void> {
+  if (Platform.OS !== "android" || (Platform.Version as number) < 31) return;
+  try {
+    const asked = await AsyncStorage.getItem(EXACT_ALARM_ASKED_KEY);
+    if (asked) return;
+    await AsyncStorage.setItem(EXACT_ALARM_ASKED_KEY, "1");
+  } catch {
+    return;
+  }
+  Alert.alert(
+    "알람 및 리마인더 설정",
+    "목표일 알림이 설정한 시간에 정확하게 오려면 \"알람 및 리마인더\" 권한이 필요합니다.",
+    [
+      { text: "나중에", style: "cancel" },
+      {
+        text: "설정으로 이동",
+        onPress: () =>
+          Linking.sendIntent("android.settings.REQUEST_SCHEDULE_EXACT_ALARM").catch(() =>
+            Linking.openSettings()
+          ),
+      },
+    ]
+  );
 }
 
 export async function scheduleGoalReminder(goal: SavedDate): Promise<void> {

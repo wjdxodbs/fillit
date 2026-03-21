@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { requestWidgetUpdate } from "react-native-android-widget";
 import { useTheme } from "./stores/themeStore";
-import { setupNotificationChannel, requestNotificationPermission } from "./utils/notifications";
+import { setupNotificationChannel, requestNotificationPermission, requestExactAlarmPermissionIfNeeded } from "./utils/notifications";
 import { getWidgetDataForConfig } from "./widgets/widgetDataHelpers";
 import { renderFillitWidget } from "./widgets/widget-task-handler";
 import { RootTabNavigator, linking } from "./navigation/RootTabNavigator";
@@ -32,6 +32,7 @@ export function AppContent() {
   useEffect(() => {
     setupNotificationChannel()
       .then(() => requestNotificationPermission())
+      .then((granted) => { if (granted) requestExactAlarmPermissionIfNeeded(); })
       .catch(() => {});
   }, []);
 
