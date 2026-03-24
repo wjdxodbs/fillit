@@ -1,33 +1,12 @@
 import React from "react";
-import { View } from "react-native";
-import { useTheme } from "../../stores/themeStore";
+import { View, type ViewStyle } from "react-native";
 
 export type CellState = "empty" | "filled" | "today" | "highlight";
 
 interface DayCellProps {
-  state: CellState;
-  size?: number;
+  style: ViewStyle;
 }
 
-export function DayCell({ state, size = 10 }: DayCellProps) {
-  const { theme } = useTheme();
-  const backgroundColor =
-    state === "empty"
-      ? theme.grassEmpty
-      : state === "filled"
-      ? theme.grassFilled
-      : state === "today"
-      ? theme.grassTodayCell
-      : theme.grassHighlight;
-
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.25,
-        backgroundColor,
-      }}
-    />
-  );
+export function DayCell({ style }: DayCellProps) {
+  return <View style={style} />;
 }
