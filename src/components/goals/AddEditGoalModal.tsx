@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -57,6 +56,7 @@ const createStyles = (theme: Theme) =>
       maxWidth: 340,
       backgroundColor: theme.surface,
       borderRadius: 16,
+      borderCurve: "continuous",
       padding: 24,
     },
     modalTitle: {
@@ -97,10 +97,12 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 8,
       justifyContent: "center",
       borderRadius: 8,
+      borderCurve: "continuous",
     },
     dateButtonFocused: {
       backgroundColor: theme.background,
       borderRadius: 8,
+      borderCurve: "continuous",
     },
     dateButtonHalf: {
       flex: 1,
@@ -124,6 +126,7 @@ const createStyles = (theme: Theme) =>
       flex: 1,
       paddingVertical: 12,
       borderRadius: 8,
+      borderCurve: "continuous",
       alignItems: "center",
     },
     cancelBtn: {
@@ -182,7 +185,7 @@ export function AddEditGoalModal({
     >
       <KeyboardAvoidingView
         style={styles.modalOverlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
         enabled={false}
       >
         <Pressable style={StyleSheet.absoluteFill} onPress={closeModal} />

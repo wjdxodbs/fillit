@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { requestWidgetUpdate } from "react-native-android-widget";
@@ -37,7 +37,7 @@ export function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS === "android") {
+    if (process.env.EXPO_OS === "android") {
       requestWidgetUpdate({
         widgetName: "FillitGrass",
         renderWidget: async (widgetInfo) => {

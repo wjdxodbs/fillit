@@ -65,11 +65,7 @@ export function RootTabNavigator() {
               backgroundColor: theme.surface,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
-              elevation: 8,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
+              boxShadow: "0 -2px 8px rgba(0, 0, 0, 0.15)",
             }}
           />
         ),
@@ -83,7 +79,7 @@ export function RootTabNavigator() {
             delayLongPress={props.delayLongPress ?? undefined}
             style={[
               props.style,
-              { borderRadius: 12, justifyContent: "center", alignItems: "center" },
+              { borderRadius: 12, borderCurve: "continuous", justifyContent: "center", alignItems: "center" },
             ]}
             accessibilityRole={props.accessibilityRole}
             accessibilityLabel={props.accessibilityLabel}
