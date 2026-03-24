@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { isLeapYear, getDayOfYear, isSameDay, chunkArray } from "../../utils/dateUtils";
+import { isLeapYear, getDayOfYear, chunkArray } from "../../utils/dateUtils";
 import { COLUMNS, resolveCellState } from "../../constants/gridConstants";
 import type { CellState } from "../common/DayCell";
 import { useCellSize } from "../../hooks/useCellSize";
@@ -12,26 +12,25 @@ interface YearGrassGridProps {
   cellSize?: number;
 }
 
-export function YearGrassGrid({
+export const YearGrassGrid = React.memo(function YearGrassGrid({
   year,
   endDate,
   cellSize: cellSizeProp,
 }: YearGrassGridProps) {
   const cellSize = useCellSize(cellSizeProp);
-  const endDayOfYear =
-    endDate.getFullYear() === year ? getDayOfYear(endDate) : 0;
 
   const rows = useMemo(() => {
+    const endDayOfYear =
+      endDate.getFullYear() === year ? getDayOfYear(endDate) : 0;
     const daysInYear = isLeapYear(year) ? 366 : 365;
     const cells: CellState[] = [];
     for (let d = 1; d <= daysInYear; d++) {
       const filled = d <= endDayOfYear;
-      const isEndDay = d === endDayOfYear;
-      const isToday = isSameDay(new Date(year, 0, d), endDate);
-      cells.push(resolveCellState(filled, isToday, isEndDay));
+      const isToday = d === endDayOfYear;
+      cells.push(resolveCellState(filled, isToday, false));
     }
     return chunkArray(cells, COLUMNS);
   }, [year, endDate]);
 
   return <GrassGrid rows={rows} cellSize={cellSize} />;
-}
+});

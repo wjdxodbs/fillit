@@ -13,7 +13,7 @@ interface RangeGrassGridProps {
   cellSize?: number;
 }
 
-export function RangeGrassGrid({
+export const RangeGrassGrid = React.memo(function RangeGrassGrid({
   totalDays,
   elapsedDays,
   isCompleted = false,
@@ -32,4 +32,4 @@ export function RangeGrassGrid({
   }, [totalDays, elapsedDays, isCompleted]);
 
   return <GrassGrid rows={rows} cellSize={cellSize} />;
-}
+});
