@@ -46,6 +46,7 @@ export function DateDetailScreen({ route }: Props) {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
         <StatsCard
