@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTodayStr } from "../hooks/useTodayStr";
 import { useTheme } from "../stores/themeStore";
 import { WeekDateStrip } from "../components/home/WeekDateStrip";
@@ -35,6 +36,7 @@ const createStyles = (theme: Theme) =>
   });
 
 export function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const todayStr = useTodayStr();
@@ -59,8 +61,7 @@ export function HomeScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
-      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={[styles.content, { paddingTop: 20 + insets.top }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerRow}>
