@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo } from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -10,9 +10,15 @@ import type { DatesStackParamList } from "../navigation/DatesStackScreen";
 import type { SavedDate } from "../types";
 import type { Theme } from "../theme";
 import { GoalListItem } from "../components/goals/GoalListItem";
+import { GoalItemMenu } from "../components/goals/GoalItemMenu";
 import { SkeletonGoalList } from "../components/goals/SkeletonGoalList";
 import { AddEditGoalModal } from "../components/goals/AddEditGoalModal";
 import { ScreenSeparator } from "../components/common/ScreenSeparator";
+import { useBottomSheet } from "../hooks/useBottomSheet";
+
+// GoalListItem: paddingVertical 14*2 + title(~21) + gap(2) + date(~18) = 69, marginBottom 10
+const GOAL_ITEM_HEIGHT = 69;
+const GOAL_ITEM_MARGIN = 10;
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -65,6 +71,9 @@ export function DatesListScreen({ navigation }: Props) {
   }, [dates, todayStr]);
 
   const { openAdd, openEdit, ...modalProps } = useGoalForm(add, update);
+  const { visible: menuVisible, setVisible: setMenuVisible, close: closeMenu, backdropOpacity, sheetTranslateY } =
+    useBottomSheet();
+  const [menuItem, setMenuItem] = useState<SavedDate | null>(null);
 
   const handleNavigate = useCallback(
     (item: SavedDate) => {
@@ -77,7 +86,13 @@ export function DatesListScreen({ navigation }: Props) {
     [navigation]
   );
 
-  const handleEdit = useCallback((item: SavedDate) => openEdit(item), [openEdit]);
+  const handleMenuPress = useCallback(
+    (item: SavedDate) => {
+      setMenuItem(item);
+      setMenuVisible(true);
+    },
+    [setMenuVisible]
+  );
 
   const handleDelete = useCallback(
     (item: SavedDate) => {
@@ -102,11 +117,10 @@ export function DatesListScreen({ navigation }: Props) {
         item={item}
         todayStr={todayStr}
         onPress={handleNavigate}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onMenuPress={handleMenuPress}
       />
     ),
-    [todayStr, handleNavigate, handleEdit, handleDelete]
+    [todayStr, handleNavigate, handleMenuPress]
   );
 
   useLayoutEffect(() => {
@@ -130,6 +144,12 @@ export function DatesListScreen({ navigation }: Props) {
           data={sortedDates}
           keyExtractor={(item) => item.id}
           removeClippedSubviews
+          contentInsetAdjustmentBehavior="automatic"
+          getItemLayout={(_, index) => ({
+            length: GOAL_ITEM_HEIGHT + GOAL_ITEM_MARGIN,
+            offset: (GOAL_ITEM_HEIGHT + GOAL_ITEM_MARGIN) * index,
+            index,
+          })}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyState}>
@@ -147,6 +167,17 @@ export function DatesListScreen({ navigation }: Props) {
         />
       )}
       <AddEditGoalModal {...modalProps} />
+      {menuItem && (
+        <GoalItemMenu
+          title={menuItem.title}
+          visible={menuVisible}
+          backdropOpacity={backdropOpacity}
+          sheetTranslateY={sheetTranslateY}
+          onClose={() => closeMenu()}
+          onEdit={() => closeMenu(() => openEdit(menuItem))}
+          onDelete={() => closeMenu(() => handleDelete(menuItem))}
+        />
+      )}
     </View>
   );
 }

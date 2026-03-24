@@ -12,9 +12,7 @@ import { useTheme } from "../../stores/themeStore";
 import { type Theme } from "../../theme";
 import type { SavedDate } from "../../types";
 import { formatDateRange } from "../../utils/dateUtils";
-import { useBottomSheet } from "../../hooks/useBottomSheet";
 import { useGoalProgress } from "../../hooks/goals/useGoalProgress";
-import { GoalItemMenu } from "./GoalItemMenu";
 
 const PROGRESS_GRADIENT_COLORS = ["rgba(0,196,154,0.35)", "rgba(0,100,80,0.4)"] as const;
 const COMPLETED_BADGE_BG = "rgba(0,196,154,0.15)";
@@ -23,8 +21,7 @@ interface GoalListItemProps {
   item: SavedDate;
   todayStr: string;
   onPress: (item: SavedDate) => void;
-  onEdit: (item: SavedDate) => void;
-  onDelete: (item: SavedDate) => void;
+  onMenuPress: (item: SavedDate) => void;
 }
 
 const createStyles = (theme: Theme) =>
@@ -36,6 +33,7 @@ const createStyles = (theme: Theme) =>
       paddingHorizontal: 16,
       backgroundColor: theme.surface,
       borderRadius: 12,
+      borderCurve: "continuous",
       marginBottom: 10,
       overflow: "hidden",
     },
@@ -57,6 +55,7 @@ const createStyles = (theme: Theme) =>
       overflow: "hidden",
       borderTopRightRadius: 12,
       borderBottomRightRadius: 12,
+      borderCurve: "continuous",
     },
     itemContent: {
       flex: 1,
@@ -92,6 +91,7 @@ const createStyles = (theme: Theme) =>
       paddingVertical: 2,
       backgroundColor: COMPLETED_BADGE_BG,
       borderRadius: 6,
+      borderCurve: "continuous",
     },
     completedBadgeText: {
       fontSize: 11,
@@ -104,62 +104,47 @@ export const GoalListItem = React.memo(function GoalListItem({
   item,
   todayStr,
   onPress,
-  onEdit,
-  onDelete,
+  onMenuPress,
 }: GoalListItemProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { visible: menuVisible, setVisible: setMenuVisible, close: closeSheet, backdropOpacity, sheetTranslateY } =
-    useBottomSheet();
   const { isCompleted, progressPercent } = useGoalProgress(item.baseDate, item.targetDate, todayStr);
 
   return (
-    <>
-      <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={() => onPress(item)}>
-        <View style={styles.itemProgressBgWrap}>
-          <LinearGradient
-            colors={PROGRESS_GRADIENT_COLORS}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.itemProgressBg, { width: `${Math.min(100, progressPercent)}%` }]}
-          />
-        </View>
-        <View style={styles.itemContent}>
-          <View style={styles.itemHeaderRow}>
-            <Text style={[styles.itemTitle, isCompleted && styles.itemTitleCompleted]} numberOfLines={1}>
-              {item.title}
-            </Text>
-            {isCompleted && (
-              <View style={styles.completedBadge}>
-                <Text style={styles.completedBadgeText}>완료</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.itemDate}>
-            {formatDateRange(item.baseDate, item.targetDate)}
+    <Pressable style={[styles.item, isCompleted && styles.itemCompleted]} onPress={() => onPress(item)}>
+      <View style={styles.itemProgressBgWrap}>
+        <LinearGradient
+          colors={PROGRESS_GRADIENT_COLORS}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.itemProgressBg, { width: `${Math.min(100, progressPercent)}%` }]}
+        />
+      </View>
+      <View style={styles.itemContent}>
+        <View style={styles.itemHeaderRow}>
+          <Text style={[styles.itemTitle, isCompleted && styles.itemTitleCompleted]} numberOfLines={1}>
+            {item.title}
           </Text>
+          {isCompleted && (
+            <View style={styles.completedBadge}>
+              <Text style={styles.completedBadgeText}>완료</Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            setMenuVisible(true);
-          }}
-          style={styles.moreBtn}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="ellipsis-vertical" size={18} color={theme.textSecondary} />
-        </TouchableOpacity>
-      </Pressable>
-
-      <GoalItemMenu
-        title={item.title}
-        visible={menuVisible}
-        backdropOpacity={backdropOpacity}
-        sheetTranslateY={sheetTranslateY}
-        onClose={() => closeSheet()}
-        onEdit={() => closeSheet(() => onEdit(item))}
-        onDelete={() => closeSheet(() => onDelete(item))}
-      />
-    </>
+        <Text style={styles.itemDate}>
+          {formatDateRange(item.baseDate, item.targetDate)}
+        </Text>
+      </View>
+      <TouchableOpacity
+        onPress={(e) => {
+          e.stopPropagation();
+          onMenuPress(item);
+        }}
+        style={styles.moreBtn}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons name="ellipsis-vertical" size={18} color={theme.textSecondary} />
+      </TouchableOpacity>
+    </Pressable>
   );
 });
