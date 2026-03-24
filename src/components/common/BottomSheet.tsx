@@ -25,6 +25,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: theme.surface,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
+      borderCurve: "continuous",
       paddingHorizontal: 20,
       paddingBottom: 32,
       paddingTop: 12,

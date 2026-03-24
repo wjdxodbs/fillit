@@ -15,6 +15,7 @@ const createStyles = (theme: Theme) =>
     statsCard: {
       backgroundColor: theme.surface,
       borderRadius: 16,
+      borderCurve: "continuous",
       padding: 16,
       marginBottom: 20,
     },
